@@ -80,6 +80,7 @@ const DispatchView: React.FC = () => {
         color: newDispatch.color || '',
         ficha: newDispatch.ficha || '',
         numeroOrden: newDispatch.numeroOrden || '',
+        ticketOrden: newDispatch.ticketOrden || '',
         m3: newDispatch.m3 || null,
         materials: newDispatch.materials,
         cliente: newDispatch.cliente,
