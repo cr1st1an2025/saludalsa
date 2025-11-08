@@ -20,8 +20,8 @@ export class UserModel {
           username VARCHAR(50) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
           role VARCHAR(20) DEFAULT 'employee' NOT NULL,
-          created_by INTEGER REFERENCES users(id),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          createdby INTEGER REFERENCES users(id),
+          createdat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
     } finally {
@@ -34,11 +34,16 @@ export class UserModel {
     const client = await db.connect();
     
     try {
+      console.log('👤 Creando usuario:', { username, role, createdBy });
       const result = await client.query(
-        'INSERT INTO users (username, password, role, created_by) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role, created_by, created_at',
+        'INSERT INTO users (username, password, role, createdby) VALUES ($1, $2, $3, $4) RETURNING id, username, password, role, createdby as created_by, createdat as created_at',
         [username, hashedPassword, role, createdBy || null]
       );
+      console.log('✅ Usuario creado:', result.rows[0].id);
       return result.rows[0];
+    } catch (error) {
+      console.error('❌ Error en createUser:', error);
+      throw error;
     } finally {
       client.release();
     }
@@ -66,10 +71,15 @@ export class UserModel {
     const client = await db.connect();
     
     try {
+      console.log('🔍 Obteniendo todos los usuarios...');
       const result = await client.query(
-        'SELECT id, username, role, created_by, created_at FROM users ORDER BY id ASC'
+        'SELECT id, username, role, createdby as created_by, createdat as created_at FROM users ORDER BY id ASC'
       );
+      console.log('✅ Usuarios encontrados:', result.rows.length);
       return result.rows;
+    } catch (error) {
+      console.error('❌ Error en getAllUsers:', error);
+      throw error;
     } finally {
       client.release();
     }
