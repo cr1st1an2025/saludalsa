@@ -194,38 +194,24 @@ router.post('/', async (req: AuthRequest, res) => {
   const client = await db.connect();
   
   try {
-    // 1. Guardar o actualizar datos del camión (SIN numeroOrden, ese es solo del ticket)
+    // 1. Guardar o actualizar datos del camión usando UPSERT
     if (placaUpper) {
       console.log('🚛 Procesando datos del camión, placa:', placaUpper, 'm3:', finalM3);
       
-      // Verificar si el camión ya existe
-      const camionExistente = await client.query(
-        'SELECT id FROM camiones WHERE placa = $1',
-        [placaUpper]
+      // Usar UPSERT (INSERT ... ON CONFLICT) para evitar duplicados
+      await client.query(
+        `INSERT INTO camiones (placa, marca, color, ficha, m3, estado, createdAt, updatedAt)
+         VALUES ($1, $2, $3, $4, $5, 'activo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         ON CONFLICT (placa) 
+         DO UPDATE SET 
+           marca = COALESCE($2, camiones.marca),
+           color = COALESCE($3, camiones.color),
+           ficha = COALESCE($4, camiones.ficha),
+           m3 = COALESCE($5, camiones.m3),
+           updatedAt = CURRENT_TIMESTAMP`,
+        [placaUpper, camionUpper || 'SIN ESPECIFICAR', colorUpper, fichaUpper, finalM3]
       );
-      
-      if (camionExistente.rows.length > 0) {
-        // Actualizar datos del camión existente
-        console.log('📝 Actualizando camión existente');
-        await client.query(
-          `UPDATE camiones 
-           SET marca = COALESCE($1, marca), 
-               color = COALESCE($2, color), 
-               ficha = COALESCE($3, ficha),
-               m3 = COALESCE($4, m3),
-               updatedAt = CURRENT_TIMESTAMP
-           WHERE placa = $5`,
-          [camionUpper, colorUpper, fichaUpper, finalM3, placaUpper]
-        );
-      } else {
-        // Crear nuevo camión
-        console.log('➕ Creando nuevo camión con M³:', finalM3);
-        await client.query(
-          `INSERT INTO camiones (placa, marca, color, ficha, m3, estado)
-           VALUES ($1, $2, $3, $4, $5, 'activo')`,
-          [placaUpper, camionUpper || 'SIN ESPECIFICAR', colorUpper, fichaUpper, finalM3]
-        );
-      }
+      console.log('✅ Camión guardado/actualizado');
     }
     
     // 2. Obtener siguiente número de despacho (atómico)
