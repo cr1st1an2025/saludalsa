@@ -29,29 +29,31 @@ const EmployeeManagementView: React.FC = () => {
     const fetchEmployees = async () => {
       try {
         const token = localStorage.getItem('token');
+        console.log('🔍 Cargando empleados...');
         const response = await fetch(`${API_URL}/auth/users`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         
+        console.log('📡 Respuesta status:', response.status);
+        
         if (response.ok) {
           const data = await response.json();
-          // Validar que sea array
-          setEmployees(Array.isArray(data) ? data : (data.data || []));
+          console.log('📊 Datos recibidos:', data);
+          
+          // El backend devuelve { data: [...] }
+          const usersList = data.data || data;
+          console.log('👥 Lista de usuarios:', usersList);
+          
+          setEmployees(Array.isArray(usersList) ? usersList : []);
         } else {
-          console.error('Error al cargar empleados:', response.statusText);
-          // Fallback: mostrar datos simulados
-          setEmployees([
-            { id: 1, username: 'admin', role: 'admin' }
-          ]);
+          console.error('❌ Error al cargar empleados:', response.statusText);
+          setEmployees([]);
         }
       } catch (error) {
-        console.error('Error al cargar empleados:', error);
-        // Fallback: mostrar datos simulados
-        setEmployees([
-          { id: 1, username: 'admin', role: 'admin' }
-        ]);
+        console.error('❌ Error al cargar empleados:', error);
+        setEmployees([]);
       }
     };
 
@@ -103,8 +105,10 @@ const EmployeeManagementView: React.FC = () => {
         });
         if (usersResponse.ok) {
           const usersData = await usersResponse.json();
-          // Validar que sea array
-          setEmployees(Array.isArray(usersData) ? usersData : (usersData.data || []));
+          console.log('🔄 Usuarios actualizados:', usersData);
+          // El backend devuelve { data: [...] }
+          const usersList = usersData.data || usersData;
+          setEmployees(Array.isArray(usersList) ? usersList : []);
         }
         // Limpiar formulario
         setUsername('');
