@@ -87,7 +87,10 @@ router.get('/', async (req, res) => {
       console.log('📦 Primer despacho enviado al frontend:', {
         despachoNo: mappedData[0].despachoNo,
         userName: mappedData[0].userName,
-        userId: mappedData[0].userId
+        userId: mappedData[0].userId,
+        numeroOrden: mappedData[0].numeroOrden,
+        ticketOrden: mappedData[0].ticketOrden,
+        m3: mappedData[0].m3
       });
     }
     
@@ -237,6 +240,11 @@ router.post('/', async (req: AuthRequest, res) => {
     const params = [despachoNo, fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, ticketOrdenUpper, finalM3, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
     
     console.log('💾 Insertando en BD con userId:', finalUserId);
+    console.log('📋 Valores a insertar:', {
+      numeroOrden: numeroOrdenUpper,
+      ticketOrden: ticketOrdenUpper,
+      m3: finalM3
+    });
     
     const result = await client.query(sql, params);
     const dispatchId = result.rows[0].id;
