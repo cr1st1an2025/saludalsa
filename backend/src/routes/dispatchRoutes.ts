@@ -200,7 +200,7 @@ router.post('/', async (req: AuthRequest, res) => {
       
       // Usar UPSERT (INSERT ... ON CONFLICT) para evitar duplicados
       await client.query(
-        `INSERT INTO camiones (placa, marca, color, ficha, m3, estado, createdAt, updatedAt)
+        `INSERT INTO camiones (placa, marca, color, ficha, m3, estado, createdat, updatedat)
          VALUES ($1, $2, $3, $4, $5, 'activo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
          ON CONFLICT (placa) 
          DO UPDATE SET 
@@ -208,7 +208,7 @@ router.post('/', async (req: AuthRequest, res) => {
            color = COALESCE($3, camiones.color),
            ficha = COALESCE($4, camiones.ficha),
            m3 = COALESCE($5, camiones.m3),
-           updatedAt = CURRENT_TIMESTAMP`,
+           updatedat = CURRENT_TIMESTAMP`,
         [placaUpper, camionUpper || 'SIN ESPECIFICAR', colorUpper, fichaUpper, finalM3]
       );
       console.log('✅ Camión guardado/actualizado');
