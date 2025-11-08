@@ -9,6 +9,7 @@ export interface Dispatch {
   ficha: string;
   m3: number;
   numeroOrden: string; // Número de orden del transportista/empresa
+  ticketOrden: string; // Ticket número de orden
   materials: { id: string; quantity: number }[];
   cliente: string;
   celular: string;

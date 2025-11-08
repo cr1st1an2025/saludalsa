@@ -98,6 +98,7 @@ export async function migrateInitDatabase() {
         color VARCHAR(50),
         ficha VARCHAR(50),
         numeroOrden VARCHAR(50),
+        ticketOrden VARCHAR(50),
         m3 DECIMAL(10,2),
         materials JSONB,
         cliente VARCHAR(255) NOT NULL,

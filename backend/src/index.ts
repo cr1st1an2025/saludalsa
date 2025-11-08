@@ -20,6 +20,7 @@ import checkRole from './middleware/roleMiddleware';
 import { migrateInitDatabase } from './migrations/init-database';
 import { migrateAddNumeroOrden } from './migrations/add-numero-orden';
 import { migrateAddCompanyFields } from './migrations/add-company-fields';
+import { migrateAddTicketOrden } from './migrations/add-ticket-orden';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -166,6 +167,7 @@ if (process.env.VERCEL !== '1') {
       await migrateInitDatabase(); // Primero: crear tablas
       await migrateAddNumeroOrden(); // Segundo: agregar columnas a dispatches
       await migrateAddCompanyFields(); // Tercero: agregar campos a companies
+      await migrateAddTicketOrden(); // Cuarto: agregar ticketorden a dispatches
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }

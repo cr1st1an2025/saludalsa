@@ -20,6 +20,7 @@ const initialFormState = {
   color: '',
   ficha: '',
   numeroOrden: '', // Número de orden del transportista
+  ticketOrden: '', // Ticket número de orden
   m3: 0,
   cliente: '',
   celular: '',
@@ -139,7 +140,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     const { id, value } = event.target;
     
     // Campos que deben convertirse a MAYÚSCULAS
-    const uppercaseFields = ['camion', 'color', 'ficha', 'numeroOrden', 'cliente'];
+    const uppercaseFields = ['camion', 'color', 'ficha', 'numeroOrden', 'ticketOrden', 'cliente'];
     const numericFields = ['userId', 'equipmentId', 'operatorId'];
     
     let finalValue: any;
@@ -295,6 +296,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
         .filter(key => selectedMaterials[key].selected && selectedMaterials[key].quantity > 0)
         .map(key => ({ id: key, quantity: selectedMaterials[key].quantity })),
       total,
+      ticketOrden: formData.ticketOrden || '', // Asegurar que siempre tenga valor
     };
     
     console.log('📤 Enviando despacho:', newDispatch);
@@ -431,9 +433,18 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
                 type="text" 
                 value={formData.numeroOrden} 
                 onChange={handleInputChange}
-                placeholder="Número de orden del transportista (proporcionado verbalmente)"
+                placeholder="Número de orden del transportista"
               />
               <Form.Text className="text-muted">Este número lo proporciona la empresa transportista para cada viaje</Form.Text>
+            </Form.Group>
+            <Form.Group as={Col} controlId="ticketOrden">
+              <Form.Label>Ticket Nº Orden</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={formData.ticketOrden} 
+                onChange={handleInputChange}
+                placeholder="Ticket número de orden"
+              />
             </Form.Group>
             <Form.Group as={Col} controlId="m3">
               <Form.Label>M³ *</Form.Label>

@@ -95,6 +95,9 @@ const DispatchDetailModal: React.FC<DispatchDetailModalProps> = ({ dispatch, sho
                 {dispatch.numeroOrden && (
                   <p><strong>Número de Orden:</strong> <span className="badge bg-warning text-dark">{dispatch.numeroOrden}</span></p>
                 )}
+                {dispatch.ticketOrden && (
+                  <p><strong>Ticket Nº Orden:</strong> <span className="badge bg-success text-white">{dispatch.ticketOrden}</span></p>
+                )}
               </Col>
             </Row>
           </Card.Body>

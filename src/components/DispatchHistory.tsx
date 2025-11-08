@@ -79,6 +79,9 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
           'CAMIÓN': d.camion || 'NO ESPECIFICADO',
           'COLOR': d.color || 'NO ESPECIFICADO',
           'FICHA': d.ficha || 'NO ESPECIFICADO',
+          'M³': d.m3 > 0 ? d.m3 : 'N/A',
+          'NÚMERO DE ORDEN': d.numeroOrden || 'N/A',
+          'TICKET Nº ORDEN': d.ticketOrden || 'N/A',
           'MATERIALES': materialDetails,
           'TOTAL (RD$)': d.total.toFixed(2),
           'ATENDIDO POR': d.userName || 'NO ESPECIFICADO',
@@ -104,6 +107,9 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         { wch: 15 }, // CAMIÓN
         { wch: 12 }, // COLOR
         { wch: 12 }, // FICHA
+        { wch: 10 }, // M³
+        { wch: 18 }, // NÚMERO DE ORDEN
+        { wch: 18 }, // TICKET Nº ORDEN
         { wch: 50 }, // MATERIALES
         { wch: 15 }, // TOTAL
         { wch: 20 }, // ATENDIDO POR
@@ -129,7 +135,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       
       // Aplicar formato a las celdas de totales
       for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const address = XLSX.utils.encode_cell({ r: R, c: 9 }); // Columna de TOTAL
+        const address = XLSX.utils.encode_cell({ r: R, c: 12 }); // Columna de TOTAL (ahora es la 13va columna, índice 12)
         if (!worksheet[address]) continue;
         worksheet[address].s = {
           font: { bold: true },
@@ -224,7 +230,8 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         `Color: ${dispatch.color || 'No especificado'}`,
         `Ficha: ${dispatch.ficha || 'No especificado'}`,
         ...(dispatch.m3 > 0 ? [`Capacidad: ${dispatch.m3} m³`] : []),
-        ...(dispatch.numeroOrden ? [`Número de Orden: ${dispatch.numeroOrden}`] : [])
+        ...(dispatch.numeroOrden ? [`Número de Orden: ${dispatch.numeroOrden}`] : []),
+        ...(dispatch.ticketOrden ? [`Ticket Nº Orden: ${dispatch.ticketOrden}`] : [])
       ];
       
       info.forEach(line => {
@@ -318,6 +325,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                 <p><strong>Ficha:</strong> ${dispatch.ficha || 'No especificado'}</p>
                 ${dispatch.m3 > 0 ? `<p><strong>Capacidad:</strong> ${dispatch.m3} m³</p>` : ''}
                 ${dispatch.numeroOrden ? `<p><strong>Número de Orden:</strong> ${dispatch.numeroOrden}</p>` : ''}
+                ${dispatch.ticketOrden ? `<p><strong>Ticket Nº Orden:</strong> ${dispatch.ticketOrden}</p>` : ''}
               </div>
               
               <table class="materials-table">

@@ -68,6 +68,7 @@ router.get('/', async (req, res) => {
       color: row.color,
       ficha: row.ficha,
       numeroOrden: row.numeroorden || '',
+      ticketOrden: row.ticketorden || '',
       m3: row.m3 || 0,
       materials: row.materials,
       cliente: row.cliente,
@@ -101,7 +102,7 @@ router.get('/', async (req, res) => {
 
 // POST /api/dispatches
 router.post('/', async (req: AuthRequest, res) => {
-  const { fecha, hora, camion, placa, color, ficha, numeroOrden, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
+  const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
   
   // Convertir campos de texto a MAYÚSCULAS
   const camionUpper = camion ? camion.toUpperCase() : '';
@@ -109,9 +110,10 @@ router.post('/', async (req: AuthRequest, res) => {
   const colorUpper = color ? color.toUpperCase() : '';
   const fichaUpper = ficha ? ficha.toUpperCase() : '';
   const numeroOrdenUpper = numeroOrden ? numeroOrden.toUpperCase() : '';
+  const ticketOrdenUpper = ticketOrden ? ticketOrden.toUpperCase() : '';
   const clienteUpper = cliente ? cliente.toUpperCase() : '';
   
-  console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha, hora, camion: camionUpper, placa: placaUpper, numeroOrden: numeroOrdenUpper, m3, cliente: clienteUpper, userId, total, materials }, null, 2));
+  console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha, hora, camion: camionUpper, placa: placaUpper, numeroOrden: numeroOrdenUpper, ticketOrden: ticketOrdenUpper, m3, cliente: clienteUpper, userId, total, materials }, null, 2));
   
   // Validación básica de datos requeridos (despachoNo ya no es necesario, se genera automáticamente)
   if (!fecha || !hora || !camionUpper || !placaUpper || !clienteUpper) {
@@ -230,9 +232,9 @@ router.post('/', async (req: AuthRequest, res) => {
     
     console.log('🔢 Número generado:', despachoNo);
     
-    const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, numeroOrden, materials, cliente, celular, total, userId, equipmentId, operatorId)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`;
-    const params = [despachoNo, fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
+    const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, m3, materials, cliente, celular, total, userId, equipmentId, operatorId)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`;
+    const params = [despachoNo, fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, ticketOrdenUpper, finalM3, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
     
     console.log('💾 Insertando en BD con userId:', finalUserId);
     
