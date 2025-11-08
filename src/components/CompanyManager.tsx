@@ -7,6 +7,11 @@ interface Company {
   address: string;
   phone: string;
   email: string;
+  rnc: string; // RNC/NIF
+  domicilio: string; // Domicilio fiscal
+  tipo_impositivo: number; // Porcentaje de impuesto
+  exento: boolean; // Si está exento de impuestos
+  contactos: string; // Contactos adicionales
 }
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
@@ -19,7 +24,12 @@ const CompanyManager: React.FC = () => {
     name: '',
     address: '',
     phone: '',
-    email: ''
+    email: '',
+    rnc: '',
+    domicilio: '',
+    tipo_impositivo: 0,
+    exento: false,
+    contactos: ''
   });
 
   useEffect(() => {
@@ -39,9 +49,13 @@ const CompanyManager: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseFloat(value) || 0 : value)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,7 +96,12 @@ const CompanyManager: React.FC = () => {
       name: company.name,
       address: company.address || '',
       phone: company.phone || '',
-      email: company.email || ''
+      email: company.email || '',
+      rnc: company.rnc || '',
+      domicilio: company.domicilio || '',
+      tipo_impositivo: company.tipo_impositivo || 0,
+      exento: company.exento || false,
+      contactos: company.contactos || ''
     });
     setShowModal(true);
   };
@@ -109,7 +128,7 @@ const CompanyManager: React.FC = () => {
 
   const resetForm = () => {
     setEditingCompany(null);
-    setFormData({ name: '', address: '', phone: '', email: '' });
+    setFormData({ name: '', address: '', phone: '', email: '', rnc: '', domicilio: '', tipo_impositivo: 0, exento: false, contactos: '' });
     setShowModal(false);
   };
 
@@ -129,9 +148,14 @@ const CompanyManager: React.FC = () => {
             <ListGroup.Item key={company.id} className="d-flex justify-content-between align-items-center">
               <div>
                 <strong>{company.name}</strong>
-                {company.address && <div>Dirección: {company.address}</div>}
-                {company.phone && <div>Teléfono: {company.phone}</div>}
-                {company.email && <div>Email: {company.email}</div>}
+                {company.rnc && <div><strong>RNC/NIF:</strong> {company.rnc}</div>}
+                {company.address && <div><strong>Dirección:</strong> {company.address}</div>}
+                {company.domicilio && <div><strong>Domicilio Fiscal:</strong> {company.domicilio}</div>}
+                {company.phone && <div><strong>Teléfono:</strong> {company.phone}</div>}
+                {company.email && <div><strong>Email:</strong> {company.email}</div>}
+                {company.contactos && <div><strong>Contactos:</strong> {company.contactos}</div>}
+                <div><strong>Tipo Impositivo:</strong> {company.tipo_impositivo}%</div>
+                {company.exento && <div className="badge bg-success">Exento de Impuestos</div>}
               </div>
               <div>
                 <Button variant="primary" size="sm" className="me-2" onClick={() => handleEdit(company)}>
@@ -165,12 +189,35 @@ const CompanyManager: React.FC = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
+              <Form.Label>RNC/NIF *</Form.Label>
+              <Form.Control 
+                type="text" 
+                name="rnc"
+                value={formData.rnc} 
+                onChange={handleInputChange}
+                placeholder="Registro Nacional de Contribuyentes / NIF"
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
               <Form.Label>Dirección</Form.Label>
               <Form.Control 
                 type="text" 
                 name="address"
                 value={formData.address} 
                 onChange={handleInputChange} 
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Domicilio Fiscal</Form.Label>
+              <Form.Control 
+                type="text" 
+                name="domicilio"
+                value={formData.domicilio} 
+                onChange={handleInputChange}
+                placeholder="Dirección fiscal oficial"
               />
             </Form.Group>
             
@@ -191,6 +238,42 @@ const CompanyManager: React.FC = () => {
                 name="email"
                 value={formData.email} 
                 onChange={handleInputChange} 
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Contactos Adicionales</Form.Label>
+              <Form.Control 
+                as="textarea"
+                rows={2}
+                name="contactos"
+                value={formData.contactos} 
+                onChange={handleInputChange}
+                placeholder="Nombres de contacto, teléfonos adicionales, etc."
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Tipo Impositivo (%)</Form.Label>
+              <Form.Control 
+                type="number" 
+                name="tipo_impositivo"
+                value={formData.tipo_impositivo} 
+                onChange={handleInputChange}
+                step="0.01"
+                min="0"
+                max="100"
+              />
+              <Form.Text className="text-muted">Porcentaje de impuesto aplicable (ej: 18 para ITBIS 18%)</Form.Text>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                name="exento"
+                label="Exento de Impuestos"
+                checked={formData.exento}
+                onChange={handleInputChange}
               />
             </Form.Group>
           </Modal.Body>

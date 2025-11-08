@@ -18,6 +18,7 @@ import auditRoutes from './routes/auditRoutes';
 import authenticateToken from './middleware/authMiddleware';
 import checkRole from './middleware/roleMiddleware';
 import { migrateAddNumeroOrden } from './migrations/add-numero-orden';
+import { migrateAddCompanyFields } from './migrations/add-company-fields';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -162,6 +163,7 @@ if (process.env.VERCEL !== '1') {
     // Ejecutar migraciones automáticamente
     try {
       await migrateAddNumeroOrden();
+      await migrateAddCompanyFields();
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }
