@@ -17,6 +17,7 @@ import authRoutes from './routes/authRoutes';
 import auditRoutes from './routes/auditRoutes';
 import authenticateToken from './middleware/authMiddleware';
 import checkRole from './middleware/roleMiddleware';
+import { migrateInitDatabase } from './migrations/init-database';
 import { migrateAddNumeroOrden } from './migrations/add-numero-orden';
 import { migrateAddCompanyFields } from './migrations/add-company-fields';
 
@@ -160,10 +161,11 @@ if (process.env.VERCEL !== '1') {
     console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 CORS configurado para Vercel frontend`);
     
-    // Ejecutar migraciones automáticamente
+    // Ejecutar migraciones automáticamente (en orden)
     try {
-      await migrateAddNumeroOrden();
-      await migrateAddCompanyFields();
+      await migrateInitDatabase(); // Primero: crear tablas
+      await migrateAddNumeroOrden(); // Segundo: agregar columnas a dispatches
+      await migrateAddCompanyFields(); // Tercero: agregar campos a companies
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }
