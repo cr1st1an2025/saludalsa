@@ -9,4 +9,3 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  REACT_APP_API_URL = "https://gestion-despachos-production.up.railway.app/api"
