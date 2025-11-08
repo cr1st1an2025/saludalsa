@@ -9,12 +9,12 @@
 # Database
 /backend/dispatches.db
 
-# Environment variables (pero permitir archivos de ejemplo y producción)
+# Environment variables
 .env
 .env.local
+.env.production
 .env.*.local
 !.env.example
-!.env.production
 !backend/.env.example
 
 # Logs
