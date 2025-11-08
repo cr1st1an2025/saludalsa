@@ -333,28 +333,18 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                   <tr>
                     <th>Material</th>
                     <th>Cantidad (m³)</th>
-                    <th>Precio Unitario</th>
-                    <th>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${materials.map((material: { id: string; quantity: number }) => {
                     const materialName = getMaterialName(material.id);
-                    const price = getMaterialPrice(material.id);
-                    const total = price * material.quantity;
                     return `
                       <tr>
                         <td>${materialName}</td>
                         <td>${material.quantity}</td>
-                        <td>RD$ ${price.toFixed(2)}</td>
-                        <td>RD$ ${total.toFixed(2)}</td>
                       </tr>
                     `;
                   }).join('')}
-                  <tr class="total-row">
-                    <td colspan="3" style="text-align: right;">Total General:</td>
-                    <td>RD$ ${dispatch.total.toFixed(2)}</td>
-                  </tr>
                 </tbody>
               </table>
               
