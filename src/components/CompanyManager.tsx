@@ -7,7 +7,7 @@ interface Company {
   address: string;
   phone: string;
   email: string;
-  rnc: string; // RNC/NIF
+  rnc: string; // RNC
   domicilio: string; // Domicilio fiscal
   tipo_impositivo: number; // Porcentaje de impuesto
   exento: boolean; // Si está exento de impuestos
@@ -148,7 +148,7 @@ const CompanyManager: React.FC = () => {
             <ListGroup.Item key={company.id} className="d-flex justify-content-between align-items-center">
               <div>
                 <strong>{company.name}</strong>
-                {company.rnc && <div><strong>RNC/NIF:</strong> {company.rnc}</div>}
+                {company.rnc && <div><strong>RNC:</strong> {company.rnc}</div>}
                 {company.address && <div><strong>Dirección:</strong> {company.address}</div>}
                 {company.domicilio && <div><strong>Domicilio Fiscal:</strong> {company.domicilio}</div>}
                 {company.phone && <div><strong>Teléfono:</strong> {company.phone}</div>}
@@ -189,13 +189,13 @@ const CompanyManager: React.FC = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>RNC/NIF *</Form.Label>
+              <Form.Label>RNC *</Form.Label>
               <Form.Control 
                 type="text" 
                 name="rnc"
                 value={formData.rnc} 
                 onChange={handleInputChange}
-                placeholder="Registro Nacional de Contribuyentes / NIF"
+                placeholder="Registro Nacional de Contribuyentes"
                 required
               />
             </Form.Group>

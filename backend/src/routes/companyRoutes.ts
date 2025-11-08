@@ -28,7 +28,7 @@ router.post('/', async (req, res) => {
   }
   
   if (!rnc || rnc.trim() === '') {
-    return res.status(400).json({ error: 'RNC/NIF es requerido' });
+    return res.status(400).json({ error: 'RNC es requerido' });
   }
   
   const client = await db.connect();
@@ -66,7 +66,7 @@ router.put('/:id', async (req, res) => {
   }
   
   if (!rnc || rnc.trim() === '') {
-    return res.status(400).json({ error: 'RNC/NIF es requerido' });
+    return res.status(400).json({ error: 'RNC es requerido' });
   }
   
   const client = await db.connect();
