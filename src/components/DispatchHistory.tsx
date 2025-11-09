@@ -255,6 +255,8 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         `RD$ ${dispatch.total.toFixed(2)}`
       ]);
 
+      
+
       autoTable(doc, {
         head: [['Material', 'Cantidad (m³)', 'Precio Unitario', 'Total']],
         body: tableData,

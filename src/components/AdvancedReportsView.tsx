@@ -183,7 +183,6 @@ const AdvancedReportsView: React.FC = () => {
     const data = filteredDispatches.map(d => {
       const materials = safeParseMaterials(d.materials);
       const first = materials[0];
-      const materialDetails = first ? (materialNames[first.id] || first.id) : 'N/A';
 
       return {
         'Nº Despacho': d.despachoNo,
@@ -201,7 +200,7 @@ const AdvancedReportsView: React.FC = () => {
         'Empleado': d.userName || 'N/A',
         'Equipo': d.equipmentName || 'N/A',
         'Operario': d.operatorName || 'N/A',
-        'Materiales': materialDetails,
+        'Materiales': (first ? (materialNames[first.id] || first.id) : 'N/A'),
         'Total (RD$)': typeof d.total === 'number' ? d.total.toFixed(2) : parseFloat(d.total || '0').toFixed(2)
       };
     });
