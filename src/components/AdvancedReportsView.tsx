@@ -151,29 +151,78 @@ const AdvancedReportsView: React.FC = () => {
   };
 
   const exportToExcel = () => {
-    const data = filteredDispatches.map(d => ({
-      'Nº Despacho': d.despachoNo,
-      'Fecha': new Date(d.fecha).toLocaleDateString(),
-      'Cliente': d.cliente,
-      'Camión': d.camion,
-      'Placa': d.placa,
-      'Color': d.color,
-      'Ficha': d.ficha,
-      'M³': d.m3 || '',
-      'Número de Orden': d.numeroOrden || '',
-      'Ticket Nº Orden': d.ticketOrden || '',
-      'Recibido por': d.recibido,
-      'Empleado': d.userName || 'N/A',
-      'Equipo': d.equipmentName || 'N/A',
-      'Operario': d.operatorName || 'N/A',
-      'Total (RD$)': typeof d.total === 'number' ? d.total.toFixed(2) : parseFloat(d.total || '0').toFixed(2)
-    }));
+    // Mapeo de nombres y precios de materiales (consistente con Historial)
+    const materialNames: Record<string, string> = {
+      'arenaLavada': 'Arena lavada',
+      'arenaSinLavar': 'Arena sin lavar',
+      'grava': 'Grava',
+      'subBase': 'Sub-base',
+      'gravaArena': 'Grava Arena',
+      'granzote': 'Granzote',
+      'gravillin': 'Gravillín',
+      'cascajoGris': 'Cascajo gris (Relleno)',
+      'base': 'Base',
+      'rellenoAmarillento': 'Relleno amarillento'
+    };
+    const materialPrices: Record<string, number> = {
+      'arenaLavada': 1500,
+      'arenaSinLavar': 1200,
+      'grava': 1800,
+      'subBase': 1000,
+      'gravaArena': 1600,
+      'granzote': 2000,
+      'gravillin': 2200,
+      'cascajoGris': 800,
+      'base': 1100,
+      'rellenoAmarillento': 700
+    };
+    const safeParseMaterials = (m: any): { id: string; quantity: number }[] => (
+      Array.isArray(m) ? m : (typeof m === 'string' ? JSON.parse(m) : [])
+    );
+
+    const data = filteredDispatches.map(d => {
+      const materials = safeParseMaterials(d.materials);
+      const materialDetails = materials.map((m) => {
+        const name = materialNames[m.id] || m.id;
+        const price = materialPrices[m.id] || 0;
+        const total = price * m.quantity;
+        return `${name}: ${m.quantity} m³ (RD$ ${price.toFixed(2)} x ${m.quantity} = RD$ ${total.toFixed(2)})`;
+      }).join('\n');
+
+      return {
+        'Nº Despacho': d.despachoNo,
+        'Fecha': new Date(d.fecha).toLocaleDateString(),
+        'Cliente': d.cliente,
+        'Camión': d.camion,
+        'Placa': d.placa,
+        'Color': d.color,
+        'Ficha': d.ficha,
+        'M³': d.m3 || '',
+        'Número de Orden': d.numeroOrden || '',
+        'Chofer': d.chofer || 'N/A',
+        'Ticket Nº Orden': d.ticketOrden || '',
+        'Recibido por': d.recibido,
+        'Empleado': d.userName || 'N/A',
+        'Equipo': d.equipmentName || 'N/A',
+        'Operario': d.operatorName || 'N/A',
+        'Materiales': materialDetails,
+        'Total (RD$)': typeof d.total === 'number' ? d.total.toFixed(2) : parseFloat(d.total || '0').toFixed(2)
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     worksheet['!cols'] = [
       { wch: 15 }, { wch: 12 }, { wch: 25 }, { wch: 15 },
       { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 8 },
-      { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }
+      { wch: 18 }, // Número de Orden
+      { wch: 20 }, // Chofer
+      { wch: 18 }, // Ticket Nº Orden
+      { wch: 20 }, // Recibido por
+      { wch: 20 }, // Empleado
+      { wch: 15 }, // Equipo
+      { wch: 15 }, // Operario
+      { wch: 50 }, // Materiales
+      { wch: 15 }  // Total (RD$)
     ];
 
     const workbook = XLSX.utils.book_new();
@@ -196,6 +245,29 @@ const AdvancedReportsView: React.FC = () => {
   };
 
   const { sum, count, avg } = calculateTotals();
+
+  // Helper para mostrar materiales en la tabla
+  const formatMaterialsSummary = (materials: any) => {
+    try {
+      const arr = Array.isArray(materials) ? materials : (typeof materials === 'string' ? JSON.parse(materials) : []);
+      const materialNames: Record<string, string> = {
+        'arenaLavada': 'Arena lavada',
+        'arenaSinLavar': 'Arena sin lavar',
+        'grava': 'Grava',
+        'subBase': 'Sub-base',
+        'gravaArena': 'Grava Arena',
+        'granzote': 'Granzote',
+        'gravillin': 'Gravillín',
+        'cascajoGris': 'Cascajo gris (Relleno)',
+        'base': 'Base',
+        'rellenoAmarillento': 'Relleno amarillento'
+      };
+      if (!arr || arr.length === 0) return '-';
+      return arr.map((m: { id: string; quantity: number }) => `${(materialNames[m.id] || m.id)}: ${m.quantity} m³`).join(', ');
+    } catch {
+      return '-';
+    }
+  };
 
   if (loading) {
     return <div className="text-center mt-4"><p>Cargando datos...</p></div>;
@@ -402,9 +474,11 @@ const AdvancedReportsView: React.FC = () => {
                     <th>M³</th>
                     <th>Nº Orden</th>
                     <th>Ticket Nº Orden</th>
+                    <th>Chofer</th>
                     <th>Empleado</th>
                     <th>Equipo</th>
                     <th>Operario</th>
+                    <th>Material(es)</th>
                     <th>Total (RD$)</th>
                   </tr>
                 </thead>
@@ -419,9 +493,11 @@ const AdvancedReportsView: React.FC = () => {
                       <td>{dispatch.m3 ? <Badge bg="info">{dispatch.m3} m³</Badge> : '-'}</td>
                       <td>{dispatch.numeroOrden ? <Badge bg="warning" text="dark">{dispatch.numeroOrden}</Badge> : '-'}</td>
                       <td>{dispatch.ticketOrden ? <Badge bg="success" text="white">{dispatch.ticketOrden}</Badge> : '-'}</td>
+                      <td>{dispatch.chofer || 'N/A'}</td>
                       <td>{dispatch.userName || 'N/A'}</td>
                       <td>{dispatch.equipmentName || 'N/A'}</td>
                       <td>{dispatch.operatorName || 'N/A'}</td>
+                      <td>{formatMaterialsSummary(dispatch.materials)}</td>
                       <td className="text-end"><strong>{typeof dispatch.total === 'number' ? dispatch.total.toFixed(2) : parseFloat(dispatch.total || '0').toFixed(2)}</strong></td>
                     </tr>
                   ))}
