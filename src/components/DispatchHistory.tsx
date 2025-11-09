@@ -275,6 +275,13 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         }
       });
 
+      // Firmas
+      const finalY = (doc as any).lastAutoTable?.finalY || yPosition + 20;
+      doc.text('___________________________', 30, finalY + 20);
+      doc.text('Firma del responsable', 30, finalY + 27);
+      doc.text('___________________________', 130, finalY + 20);
+      doc.text(`Firmado por ${dispatch.chofer || 'Responsable'}`, 130, finalY + 27);
+
       // Guardar PDF
       doc.save(`Despacho_${dispatch.despachoNo}.pdf`);
     } catch (error) {
@@ -355,7 +362,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
               <div class="signature-section">
                 <div>
                   <p>___________________________</p>
-                  <p>Firma del Cliente</p>
+                  <p>Firma del responsable</p>
                 </div>
                 <div>
                   <p>___________________________</p>
