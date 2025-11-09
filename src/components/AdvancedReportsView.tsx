@@ -182,7 +182,14 @@ const AdvancedReportsView: React.FC = () => {
 
     const data = filteredDispatches.map(d => {
       const materials = safeParseMaterials(d.materials);
-      const first = materials[0];
+      let materialNameOnly = 'N/A';
+      const matRaw = (d as any).materials;
+      if (materials && materials.length > 0) {
+        const first = materials[0];
+        materialNameOnly = materialNames[first.id] || first.id;
+      } else if (typeof matRaw === 'string' && matRaw) {
+        materialNameOnly = matRaw.split(':')[0].trim();
+      }
 
       return {
         'Nº Despacho': d.despachoNo,
@@ -200,7 +207,7 @@ const AdvancedReportsView: React.FC = () => {
         'Empleado': d.userName || 'N/A',
         'Equipo': d.equipmentName || 'N/A',
         'Operario': d.operatorName || 'N/A',
-        'Materiales': (first ? (materialNames[first.id] || first.id) : 'N/A'),
+        'Materiales': materialNameOnly,
         'Total (RD$)': typeof d.total === 'number' ? d.total.toFixed(2) : parseFloat(d.total || '0').toFixed(2)
       };
     });
