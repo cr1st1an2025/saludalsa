@@ -182,10 +182,8 @@ const AdvancedReportsView: React.FC = () => {
 
     const data = filteredDispatches.map(d => {
       const materials = safeParseMaterials(d.materials);
-      const materialDetails = materials.map((m) => {
-        const name = materialNames[m.id] || m.id;
-        return name;
-      }).join(', ');
+      const first = materials[0];
+      const materialDetails = first ? (materialNames[first.id] || first.id) : 'N/A';
 
       return {
         'Nº Despacho': d.despachoNo,
@@ -261,7 +259,8 @@ const AdvancedReportsView: React.FC = () => {
         'rellenoAmarillento': 'Relleno amarillento'
       };
       if (!arr || arr.length === 0) return '-';
-      return arr.map((m: { id: string; quantity: number }) => (materialNames[m.id] || m.id)).join(', ');
+      const first = arr[0];
+      return first ? (materialNames[first.id] || first.id) : '-';
     } catch {
       return '-';
     }
