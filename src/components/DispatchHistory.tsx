@@ -65,10 +65,8 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         // Calcular detalles de materiales
         const materialDetails = materials.map((material: { id: string; quantity: number }) => {
           const materialName = getMaterialName(material.id);
-          const price = getMaterialPrice(material.id);
-          const total = price * material.quantity;
-          return `${materialName}: ${material.quantity} m³ (RD$ ${price.toFixed(2)} x ${material.quantity} = RD$ ${total.toFixed(2)})`;
-        }).join('\n');
+          return materialName;
+        }).join(', ');
         
         return {
           'Nº DESPACHO': d.despachoNo,
@@ -112,7 +110,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         { wch: 18 }, // NÚMERO DE ORDEN
         { wch: 20 }, // CHOFER
         { wch: 18 }, // TICKET Nº ORDEN
-        { wch: 50 }, // MATERIALES
+        { wch: 25 }, // MATERIALES
         { wch: 15 }, // TOTAL
         { wch: 20 }, // ATENDIDO POR
         { wch: 15 }, // EQUIPO

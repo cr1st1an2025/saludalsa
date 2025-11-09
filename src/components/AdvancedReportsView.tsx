@@ -219,7 +219,7 @@ const AdvancedReportsView: React.FC = () => {
       { wch: 20 }, // Empleado
       { wch: 15 }, // Equipo
       { wch: 15 }, // Operario
-      { wch: 50 }, // Materiales
+      { wch: 25 }, // Materiales
       { wch: 15 }  // Total (RD$)
     ];
 
