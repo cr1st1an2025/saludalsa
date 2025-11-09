@@ -261,7 +261,7 @@ const AdvancedReportsView: React.FC = () => {
         'rellenoAmarillento': 'Relleno amarillento'
       };
       if (!arr || arr.length === 0) return '-';
-      return arr.map((m: { id: string; quantity: number }) => `${(materialNames[m.id] || m.id)}: ${m.quantity} m³`).join(', ');
+      return arr.map((m: { id: string; quantity: number }) => (materialNames[m.id] || m.id)).join(', ');
     } catch {
       return '-';
     }
