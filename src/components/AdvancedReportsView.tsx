@@ -184,10 +184,8 @@ const AdvancedReportsView: React.FC = () => {
       const materials = safeParseMaterials(d.materials);
       const materialDetails = materials.map((m) => {
         const name = materialNames[m.id] || m.id;
-        const price = materialPrices[m.id] || 0;
-        const total = price * m.quantity;
-        return `${name}: ${m.quantity} m³ (RD$ ${price.toFixed(2)} x ${m.quantity} = RD$ ${total.toFixed(2)})`;
-      }).join('\n');
+        return name;
+      }).join(', ');
 
       return {
         'Nº Despacho': d.despachoNo,
