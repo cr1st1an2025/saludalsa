@@ -69,6 +69,7 @@ router.get('/', async (req, res) => {
       ficha: row.ficha,
       numeroOrden: row.numeroorden || '',
       ticketOrden: row.ticketorden || '',
+      chofer: row.chofer || '',
       m3: row.m3 || 0,
       materials: row.materials,
       cliente: row.cliente,
@@ -90,6 +91,7 @@ router.get('/', async (req, res) => {
         userId: mappedData[0].userId,
         numeroOrden: mappedData[0].numeroOrden,
         ticketOrden: mappedData[0].ticketOrden,
+        chofer: mappedData[0].chofer,
         m3: mappedData[0].m3
       });
     }

@@ -81,6 +81,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
           'FICHA': d.ficha || 'NO ESPECIFICADO',
           'M³': d.m3 > 0 ? d.m3 : 'N/A',
           'NÚMERO DE ORDEN': d.numeroOrden || 'N/A',
+          'CHOFER': d.chofer || 'N/A',
           'TICKET Nº ORDEN': d.ticketOrden || 'N/A',
           'MATERIALES': materialDetails,
           'TOTAL (RD$)': d.total.toFixed(2),
@@ -109,6 +110,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         { wch: 12 }, // FICHA
         { wch: 10 }, // M³
         { wch: 18 }, // NÚMERO DE ORDEN
+        { wch: 20 }, // CHOFER
         { wch: 18 }, // TICKET Nº ORDEN
         { wch: 50 }, // MATERIALES
         { wch: 15 }, // TOTAL
@@ -135,7 +137,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       
       // Aplicar formato a las celdas de totales
       for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const address = XLSX.utils.encode_cell({ r: R, c: 12 }); // Columna de TOTAL (ahora es la 13va columna, índice 12)
+        const address = XLSX.utils.encode_cell({ r: R, c: 13 }); // Columna de TOTAL (ahora es la 14va columna, índice 13)
         if (!worksheet[address]) continue;
         worksheet[address].s = {
           font: { bold: true },
@@ -231,6 +233,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         `Ficha: ${dispatch.ficha || 'No especificado'}`,
         ...(dispatch.m3 > 0 ? [`Capacidad: ${dispatch.m3} m³`] : []),
         ...(dispatch.numeroOrden ? [`Número de Orden: ${dispatch.numeroOrden}`] : []),
+        ...(dispatch.chofer ? [`Chofer: ${dispatch.chofer}`] : []),
         ...(dispatch.ticketOrden ? [`Ticket Nº Orden: ${dispatch.ticketOrden}`] : [])
       ];
       
@@ -325,6 +328,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                 <p><strong>Ficha:</strong> ${dispatch.ficha || 'No especificado'}</p>
                 ${dispatch.m3 > 0 ? `<p><strong>Capacidad:</strong> ${dispatch.m3} m³</p>` : ''}
                 ${dispatch.numeroOrden ? `<p><strong>Número de Orden:</strong> ${dispatch.numeroOrden}</p>` : ''}
+                ${dispatch.chofer ? `<p><strong>Chofer:</strong> ${dispatch.chofer}</p>` : ''}
                 ${dispatch.ticketOrden ? `<p><strong>Ticket Nº Orden:</strong> ${dispatch.ticketOrden}</p>` : ''}
               </div>
               
@@ -355,7 +359,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                 </div>
                 <div>
                   <p>___________________________</p>
-                  <p>Firma del Responsable</p>
+                  <p>Firmado por ${dispatch.chofer || 'Responsable'}</p>
                 </div>
               </div>
             </body>

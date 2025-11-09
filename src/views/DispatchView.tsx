@@ -81,6 +81,7 @@ const DispatchView: React.FC = () => {
         ficha: newDispatch.ficha || '',
         numeroOrden: newDispatch.numeroOrden || '',
         ticketOrden: newDispatch.ticketOrden || '',
+        chofer: newDispatch.chofer || '',
         m3: newDispatch.m3 || null,
         materials: newDispatch.materials,
         cliente: newDispatch.cliente,
