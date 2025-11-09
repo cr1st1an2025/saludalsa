@@ -21,6 +21,7 @@ const initialFormState = {
   ficha: '',
   numeroOrden: '', // Número de orden del transportista
   ticketOrden: '', // Ticket número de orden
+  chofer: '', // Nombre del chofer
   m3: 0,
   cliente: '',
   celular: '',
@@ -140,7 +141,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     const { id, value } = event.target;
     
     // Campos que deben convertirse a MAYÚSCULAS
-    const uppercaseFields = ['camion', 'color', 'ficha', 'numeroOrden', 'ticketOrden', 'cliente'];
+    const uppercaseFields = ['camion', 'color', 'ficha', 'numeroOrden', 'ticketOrden', 'chofer', 'cliente'];
     const numericFields = ['userId', 'equipmentId', 'operatorId'];
     
     let finalValue: any;
@@ -297,6 +298,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
         .map(key => ({ id: key, quantity: selectedMaterials[key].quantity })),
       total,
       ticketOrden: formData.ticketOrden || '', // Asegurar que siempre tenga valor
+      chofer: formData.chofer || '', // Asegurar que siempre tenga valor
     };
     
     console.log('📤 Enviando despacho:', newDispatch);
@@ -437,6 +439,19 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
               />
               <Form.Text className="text-muted">Este número lo proporciona la empresa transportista para cada viaje</Form.Text>
             </Form.Group>
+            <Form.Group as={Col} controlId="chofer">
+              <Form.Label>Chofer</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={formData.chofer} 
+                onChange={handleInputChange}
+                placeholder="Nombre del chofer"
+              />
+              <Form.Text className="text-muted">Solo letras (nombre completo del conductor)</Form.Text>
+            </Form.Group>
+          </Row>
+          
+          <Row className="mb-3">
             <Form.Group as={Col} controlId="ticketOrden">
               <Form.Label>Ticket Nº Orden</Form.Label>
               <Form.Control 
