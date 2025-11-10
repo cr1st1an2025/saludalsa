@@ -27,10 +27,21 @@ const ProductPriceManager: React.FC = () => {
   const fetchProducts = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('Token en localStorage:', token ? 'Existe' : 'NO EXISTE');
+      
       const response = await fetch(`${API_URL}/products`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      
+      console.log('Status de respuesta:', response.status);
       const data = await response.json();
+      console.log('Datos recibidos:', data);
+      
+      if (!response.ok) {
+        setMessage({ type: 'danger', text: `Error ${response.status}: ${data.error || 'Error desconocido'}` });
+        return;
+      }
+      
       setProducts(data.data || []);
     } catch (error) {
       console.error('Error fetching products:', error);
