@@ -57,7 +57,11 @@ router.post('/register', authenticateToken, async (req: AuthRequest, res) => {
       devUsers.push(user);
       
       // Generar token
-      const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        console.error('CRITICAL: JWT_SECRET no configurado');
+        return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+      }
       const token = jwt.sign(
         { id: user.id, username: user.username, role: user.role },
         secret,
@@ -98,7 +102,11 @@ router.post('/register', authenticateToken, async (req: AuthRequest, res) => {
     }
     
     // Generar token
-    const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: JWT_SECRET no configurado');
+      return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+    }
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       secret,
@@ -235,7 +243,11 @@ router.post('/login', async (req, res) => {
       
       if (user && user.password === password) {
         // Generar token
-        const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          console.error('CRITICAL: JWT_SECRET no configurado');
+          return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+        }
         const token = jwt.sign(
           { id: user.id, username: user.username, role: user.role },
           secret,
@@ -283,8 +295,12 @@ router.post('/login', async (req, res) => {
     console.log('✓ Contraseña válida');
     
     // Generar token
-    const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
-    console.log('🔑 Generando token con JWT_SECRET:', secret ? 'configurado' : 'usando default');
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('CRITICAL: JWT_SECRET no configurado');
+      return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+    }
+    console.log('🔑 Generando token con JWT_SECRET configurado');
     
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },

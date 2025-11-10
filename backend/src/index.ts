@@ -5,6 +5,55 @@ import dotenv from 'dotenv';
 // Cargar variables de entorno
 dotenv.config();
 
+// ========================================
+// VALIDACIÓN DE SEGURIDAD CRÍTICA
+// ========================================
+function validateEnvironment() {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Validar JWT_SECRET (obligatorio)
+  if (!process.env.JWT_SECRET) {
+    errors.push('❌ JWT_SECRET no está configurado');
+  } else if (process.env.JWT_SECRET === 'secreto_por_defecto' || 
+             process.env.JWT_SECRET === 'secreto_de_desarrollo_jwt_12345') {
+    if (process.env.NODE_ENV === 'production') {
+      errors.push('❌ JWT_SECRET usa un valor por defecto inseguro en producción');
+    } else {
+      warnings.push('⚠️ JWT_SECRET usa valor por defecto (solo desarrollo)');
+    }
+  }
+
+  // Validar DATABASE_URL en producción
+  if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+    errors.push('❌ DATABASE_URL no configurado en producción');
+  }
+
+  // Validar DISABLE_AUTH en producción
+  if (process.env.NODE_ENV === 'production' && process.env.DISABLE_AUTH === 'true') {
+    errors.push('❌ DISABLE_AUTH=true en producción es INSEGURO');
+  }
+
+  // Mostrar resultados
+  if (errors.length > 0) {
+    console.error('\n🛑 ERRORES CRÍTICOS DE SEGURIDAD:');
+    errors.forEach(err => console.error(`  ${err}`));
+    console.error('\n⛔ El servidor NO puede iniciar con estos errores.\n');
+    process.exit(1);
+  }
+
+  if (warnings.length > 0) {
+    console.warn('\n⚠️ ADVERTENCIAS DE SEGURIDAD:');
+    warnings.forEach(warn => console.warn(`  ${warn}`));
+    console.warn('');
+  }
+
+  console.log('✅ Validación de seguridad completada');
+}
+
+// Ejecutar validación al inicio
+validateEnvironment();
+
 import dispatchRoutes from './routes/dispatchRoutes';
 import userRoutes from './routes/userRoutes';
 import equipmentRoutes from './routes/equipmentRoutes';
