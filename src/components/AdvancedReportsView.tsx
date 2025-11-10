@@ -151,7 +151,7 @@ const AdvancedReportsView: React.FC = () => {
   };
 
   const exportToExcel = () => {
-    // Mapeo de nombres y precios de materiales (consistente con Historial)
+    // Mapeo de nombres de materiales
     const materialNames: Record<string, string> = {
       'arenaLavada': 'Arena lavada',
       'arenaSinLavar': 'Arena sin lavar',
@@ -163,18 +163,6 @@ const AdvancedReportsView: React.FC = () => {
       'cascajoGris': 'Cascajo gris (Relleno)',
       'base': 'Base',
       'rellenoAmarillento': 'Relleno amarillento'
-    };
-    const materialPrices: Record<string, number> = {
-      'arenaLavada': 1500,
-      'arenaSinLavar': 1200,
-      'grava': 1800,
-      'subBase': 1000,
-      'gravaArena': 1600,
-      'granzote': 2000,
-      'gravillin': 2200,
-      'cascajoGris': 800,
-      'base': 1100,
-      'rellenoAmarillento': 700
     };
     const safeParseMaterials = (m: any): { id: string; quantity: number }[] => (
       Array.isArray(m) ? m : (typeof m === 'string' ? JSON.parse(m) : [])
