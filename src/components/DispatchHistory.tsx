@@ -63,8 +63,10 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
           : (typeof d.materials === 'string' ? JSON.parse(d.materials) : []);
         
         // Calcular detalles de materiales
-        const first = materials[0];
-        const materialDetails = first ? getMaterialName(first.id) : 'N/A';
+        const materialNames = materials.map((material: { id: string; quantity: number }) =>
+          getMaterialName(material.id)
+        );
+        const materialDetails = materialNames.join(', ');
         
         return {
           'Nº DESPACHO': d.despachoNo,
