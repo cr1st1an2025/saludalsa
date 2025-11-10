@@ -1,13 +1,13 @@
 export interface AuditLog {
     id: number;
-    user_id: number;
+    userId: number;
     username: string;
     action: string;
-    entity_type: string;
-    entity_id?: number;
+    entityType: string;
+    entityId?: number;
     details?: string;
-    ip_address?: string;
-    created_at: Date;
+    ipAddress?: string;
+    createdAt: Date;
 }
 export declare class AuditLogModel {
     static createTable(): Promise<void>;

@@ -62,6 +62,10 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             placa: row.placa,
             color: row.color,
             ficha: row.ficha,
+            numeroOrden: row.numeroorden || '',
+            ticketOrden: row.ticketorden || '',
+            chofer: row.chofer || '',
+            m3: row.m3 || 0,
             materials: row.materials,
             cliente: row.cliente,
             celular: row.celular,
@@ -78,7 +82,11 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             console.log('📦 Primer despacho enviado al frontend:', {
                 despachoNo: mappedData[0].despachoNo,
                 userName: mappedData[0].userName,
-                userId: mappedData[0].userId
+                userId: mappedData[0].userId,
+                numeroOrden: mappedData[0].numeroOrden,
+                ticketOrden: mappedData[0].ticketOrden,
+                chofer: mappedData[0].chofer,
+                m3: mappedData[0].m3
             });
         }
         res.json({ data: mappedData });
@@ -93,24 +101,34 @@ router.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 // POST /api/dispatches
 router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { fecha, hora, camion, placa, color, ficha, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
-    console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha, hora, camion, placa, m3, cliente, userId, total, materials }, null, 2));
+    const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
+    // Convertir campos de texto a MAYÚSCULAS
+    const camionUpper = camion ? camion.toUpperCase() : '';
+    const placaUpper = placa ? placa.toUpperCase() : '';
+    const colorUpper = color ? color.toUpperCase() : '';
+    const fichaUpper = ficha ? ficha.toUpperCase() : '';
+    const numeroOrdenUpper = numeroOrden ? numeroOrden.toUpperCase() : '';
+    const ticketOrdenUpper = ticketOrden ? ticketOrden.toUpperCase() : '';
+    const choferUpper = chofer ? chofer.toUpperCase() : '';
+    const clienteUpper = cliente ? cliente.toUpperCase() : '';
+    console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha, hora, camion: camionUpper, placa: placaUpper, numeroOrden: numeroOrdenUpper, ticketOrden: ticketOrdenUpper, chofer: choferUpper, m3, cliente: clienteUpper, userId, total, materials }, null, 2));
     // Validación básica de datos requeridos (despachoNo ya no es necesario, se genera automáticamente)
-    if (!fecha || !hora || !camion || !placa || !cliente) {
-        console.error('❌ Faltan campos requeridos:', { fecha: !!fecha, hora: !!hora, camion: !!camion, placa: !!placa, cliente: !!cliente });
+    if (!fecha || !hora || !camionUpper || !placaUpper || !clienteUpper) {
+        console.error('❌ Faltan campos requeridos:', { fecha: !!fecha, hora: !!hora, camion: !!camionUpper, placa: !!placaUpper, cliente: !!clienteUpper });
         return res.status(400).json({
             error: 'Faltan campos requeridos',
             missing: {
                 fecha: !fecha,
                 hora: !hora,
-                camion: !camion,
-                placa: !placa,
-                cliente: !cliente
+                camion: !camionUpper,
+                placa: !placaUpper,
+                cliente: !clienteUpper
             }
         });
     }
     // Convertir y validar tipos
     const finalTotal = typeof total === 'string' ? parseFloat(total) : total;
+    const finalM3 = m3 && m3 > 0 ? (typeof m3 === 'string' ? parseFloat(m3) : m3) : null;
     const finalUserId = userId && userId > 0 ? userId : 1; // Fallback a admin si no hay userId válido
     const finalEquipmentId = equipmentId && equipmentId > 0 ? equipmentId : null;
     const finalOperatorId = operatorId && operatorId > 0 ? operatorId : null;
@@ -135,7 +153,7 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     else {
         finalMaterials = [];
     }
-    console.log('✅ Datos validados:', { userId: finalUserId, total: finalTotal, materials: finalMaterials.length });
+    console.log('✅ Datos validados:', { userId: finalUserId, total: finalTotal, m3: finalM3, materials: finalMaterials.length });
     const disableAuth = process.env.DISABLE_AUTH === 'true';
     if (disableAuth) {
         // En modo desarrollo, almacenar en memoria con número automático
@@ -145,12 +163,12 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             despachoNo,
             fecha,
             hora,
-            camion,
-            placa,
-            color,
-            ficha,
+            camion: camionUpper,
+            placa: placaUpper,
+            color: colorUpper,
+            ficha: fichaUpper,
             materials: finalMaterials,
-            cliente,
+            cliente: clienteUpper,
             celular,
             total: finalTotal,
             userId: finalUserId,
@@ -165,38 +183,36 @@ router.post('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     const client = yield database_1.default.connect();
     try {
-        // 1. Guardar o actualizar datos del camión
-        if (placa) {
-            console.log('🚛 Procesando datos del camión, placa:', placa);
-            // Verificar si el camión ya existe
-            const camionExistente = yield client.query('SELECT id FROM camiones WHERE placa = $1', [placa]);
-            if (camionExistente.rows.length > 0) {
-                // Actualizar datos del camión existente
-                console.log('📝 Actualizando camión existente');
-                yield client.query(`UPDATE camiones 
-           SET marca = COALESCE($1, marca), 
-               color = COALESCE($2, color), 
-               ficha = COALESCE($3, ficha),
-               m3 = COALESCE($4, m3),
-               updatedAt = CURRENT_TIMESTAMP
-           WHERE placa = $5`, [camion, color, ficha, m3 || null, placa]);
-            }
-            else {
-                // Crear nuevo camión
-                console.log('➕ Creando nuevo camión');
-                yield client.query(`INSERT INTO camiones (placa, marca, color, ficha, m3, estado)
-           VALUES ($1, $2, $3, $4, $5, 'activo')`, [placa, camion || 'Sin especificar', color, ficha, m3 || null]);
-            }
+        // 1. Guardar o actualizar datos del camión usando UPSERT
+        if (placaUpper) {
+            console.log('🚛 Procesando datos del camión, placa:', placaUpper, 'm3:', finalM3);
+            // Usar UPSERT (INSERT ... ON CONFLICT) para evitar duplicados
+            yield client.query(`INSERT INTO camiones (placa, marca, color, ficha, m3, estado, createdat, updatedat)
+         VALUES ($1, $2, $3, $4, $5, 'activo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         ON CONFLICT (placa) 
+         DO UPDATE SET 
+           marca = COALESCE($2, camiones.marca),
+           color = COALESCE($3, camiones.color),
+           ficha = COALESCE($4, camiones.ficha),
+           m3 = COALESCE($5, camiones.m3),
+           updatedat = CURRENT_TIMESTAMP`, [placaUpper, camionUpper || 'SIN ESPECIFICAR', colorUpper, fichaUpper, finalM3]);
+            console.log('✅ Camión guardado/actualizado');
         }
         // 2. Obtener siguiente número de despacho (atómico)
         const numberResult = yield client.query('SELECT get_next_dispatch_number() as next_number');
         const nextNumber = numberResult.rows[0].next_number;
         const despachoNo = String(nextNumber).padStart(7, '0'); // 7 dígitos numéricos
         console.log('🔢 Número generado:', despachoNo);
-        const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, materials, cliente, celular, total, userId, equipmentId, operatorId)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`;
-        const params = [despachoNo, fecha, hora, camion, placa, color, ficha, JSON.stringify(finalMaterials), cliente, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
+        const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`;
+        const params = [despachoNo, fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, ticketOrdenUpper, choferUpper, finalM3, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
         console.log('💾 Insertando en BD con userId:', finalUserId);
+        console.log('📋 Valores a insertar:', {
+            numeroOrden: numeroOrdenUpper,
+            ticketOrden: ticketOrdenUpper,
+            chofer: choferUpper,
+            m3: finalM3
+        });
         const result = yield client.query(sql, params);
         const dispatchId = result.rows[0].id;
         console.log('✅ Despacho creado exitosamente. ID:', dispatchId, 'Número:', despachoNo);

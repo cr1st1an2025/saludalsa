@@ -22,21 +22,21 @@ class AuditLogModel {
                 yield client.query(`
         CREATE TABLE IF NOT EXISTS audit_logs (
           id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL,
+          userId INTEGER NOT NULL,
           username VARCHAR(50) NOT NULL,
           action VARCHAR(20) NOT NULL,
-          entity_type VARCHAR(50) NOT NULL,
-          entity_id INTEGER,
+          entityType VARCHAR(50) NOT NULL,
+          entityId INTEGER,
           details TEXT,
-          ip_address VARCHAR(45),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          ipAddress VARCHAR(45),
+          createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
                 // Crear índices para búsquedas rápidas
                 yield client.query(`
-        CREATE INDEX IF NOT EXISTS idx_audit_user_id ON audit_logs(user_id);
-        CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id);
-        CREATE INDEX IF NOT EXISTS idx_audit_created_at ON audit_logs(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_audit_userid ON audit_logs(userId);
+        CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entityType, entityId);
+        CREATE INDEX IF NOT EXISTS idx_audit_createdat ON audit_logs(createdAt DESC);
       `);
             }
             finally {
@@ -48,7 +48,7 @@ class AuditLogModel {
         return __awaiter(this, void 0, void 0, function* () {
             const client = yield database_1.default.connect();
             try {
-                yield client.query(`INSERT INTO audit_logs (user_id, username, action, entity_type, entity_id, details, ip_address) 
+                yield client.query(`INSERT INTO audit_logs (userId, username, action, entityType, entityId, details, ipAddress) 
          VALUES ($1, $2, $3, $4, $5, $6, $7)`, [userId, username, action, entityType, entityId, details ? JSON.stringify(details) : null, ipAddress]);
             }
             finally {
@@ -60,7 +60,7 @@ class AuditLogModel {
         return __awaiter(this, arguments, void 0, function* (limit = 100) {
             const client = yield database_1.default.connect();
             try {
-                const result = yield client.query(`SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT $1`, [limit]);
+                const result = yield client.query(`SELECT * FROM audit_logs ORDER BY createdAt DESC LIMIT $1`, [limit]);
                 return result.rows;
             }
             finally {
@@ -72,7 +72,7 @@ class AuditLogModel {
         return __awaiter(this, arguments, void 0, function* (userId, limit = 50) {
             const client = yield database_1.default.connect();
             try {
-                const result = yield client.query(`SELECT * FROM audit_logs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`, [userId, limit]);
+                const result = yield client.query(`SELECT * FROM audit_logs WHERE userId = $1 ORDER BY createdAt DESC LIMIT $2`, [userId, limit]);
                 return result.rows;
             }
             finally {
@@ -84,7 +84,7 @@ class AuditLogModel {
         return __awaiter(this, void 0, void 0, function* () {
             const client = yield database_1.default.connect();
             try {
-                const result = yield client.query(`SELECT * FROM audit_logs WHERE entity_type = $1 AND entity_id = $2 ORDER BY created_at DESC`, [entityType, entityId]);
+                const result = yield client.query(`SELECT * FROM audit_logs WHERE entityType = $1 AND entityId = $2 ORDER BY createdAt DESC`, [entityType, entityId]);
                 return result.rows;
             }
             finally {

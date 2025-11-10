@@ -17,6 +17,49 @@ const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 // Cargar variables de entorno
 dotenv_1.default.config();
+// ========================================
+// VALIDACIÓN DE SEGURIDAD CRÍTICA
+// ========================================
+function validateEnvironment() {
+    const errors = [];
+    const warnings = [];
+    // Validar JWT_SECRET (obligatorio)
+    if (!process.env.JWT_SECRET) {
+        errors.push('❌ JWT_SECRET no está configurado');
+    }
+    else if (process.env.JWT_SECRET === 'secreto_por_defecto' ||
+        process.env.JWT_SECRET === 'secreto_de_desarrollo_jwt_12345') {
+        if (process.env.NODE_ENV === 'production') {
+            errors.push('❌ JWT_SECRET usa un valor por defecto inseguro en producción');
+        }
+        else {
+            warnings.push('⚠️ JWT_SECRET usa valor por defecto (solo desarrollo)');
+        }
+    }
+    // Validar DATABASE_URL en producción
+    if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL) {
+        errors.push('❌ DATABASE_URL no configurado en producción');
+    }
+    // Validar DISABLE_AUTH en producción
+    if (process.env.NODE_ENV === 'production' && process.env.DISABLE_AUTH === 'true') {
+        errors.push('❌ DISABLE_AUTH=true en producción es INSEGURO');
+    }
+    // Mostrar resultados
+    if (errors.length > 0) {
+        console.error('\n🛑 ERRORES CRÍTICOS DE SEGURIDAD:');
+        errors.forEach(err => console.error(`  ${err}`));
+        console.error('\n⛔ El servidor NO puede iniciar con estos errores.\n');
+        process.exit(1);
+    }
+    if (warnings.length > 0) {
+        console.warn('\n⚠️ ADVERTENCIAS DE SEGURIDAD:');
+        warnings.forEach(warn => console.warn(`  ${warn}`));
+        console.warn('');
+    }
+    console.log('✅ Validación de seguridad completada');
+}
+// Ejecutar validación al inicio
+validateEnvironment();
 const dispatchRoutes_1 = __importDefault(require("./routes/dispatchRoutes"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const equipmentRoutes_1 = __importDefault(require("./routes/equipmentRoutes"));
@@ -29,6 +72,10 @@ const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const auditRoutes_1 = __importDefault(require("./routes/auditRoutes"));
 const authMiddleware_1 = __importDefault(require("./middleware/authMiddleware"));
 const roleMiddleware_1 = __importDefault(require("./middleware/roleMiddleware"));
+const init_database_1 = require("./migrations/init-database");
+const add_numero_orden_1 = require("./migrations/add-numero-orden");
+const add_company_fields_1 = require("./migrations/add-company-fields");
+const add_ticket_orden_1 = require("./migrations/add-ticket-orden");
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3002;
 // Configuración de CORS para Railway + Vercel
@@ -148,11 +195,21 @@ app.get('/', (req, res) => {
 });
 // Iniciar el servidor (excepto cuando se exporta para Vercel)
 if (process.env.VERCEL !== '1') {
-    app.listen(port, () => {
+    app.listen(port, () => __awaiter(void 0, void 0, void 0, function* () {
         console.log(`✅ Backend escuchando en puerto ${port}`);
         console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
         console.log(`📡 CORS configurado para Vercel frontend`);
-    });
+        // Ejecutar migraciones automáticamente (en orden)
+        try {
+            yield (0, init_database_1.migrateInitDatabase)(); // Primero: crear tablas
+            yield (0, add_numero_orden_1.migrateAddNumeroOrden)(); // Segundo: agregar columnas a dispatches
+            yield (0, add_company_fields_1.migrateAddCompanyFields)(); // Tercero: agregar campos a companies
+            yield (0, add_ticket_orden_1.migrateAddTicketOrden)(); // Cuarto: agregar ticketorden a dispatches
+        }
+        catch (error) {
+            console.error('⚠️ Error ejecutando migraciones:', error);
+        }
+    }));
 }
 // Manejo de cierre de la aplicación
 process.on('SIGINT', () => {

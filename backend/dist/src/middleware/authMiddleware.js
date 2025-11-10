@@ -17,8 +17,13 @@ const authenticateToken = (req, res, next) => {
     if (!token) {
         return res.status(401).json({ error: 'Acceso denegado. No se proporcionó token.' });
     }
+    // Validar que JWT_SECRET esté configurado
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        console.error('CRITICAL: JWT_SECRET no está configurado en las variables de entorno');
+        return res.status(500).json({ error: 'Configuración de seguridad inválida.' });
+    }
     try {
-        const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
         const decoded = jsonwebtoken_1.default.verify(token, secret);
         req.user = decoded;
         next();

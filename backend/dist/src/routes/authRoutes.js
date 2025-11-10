@@ -54,7 +54,11 @@ router.post('/register', authMiddleware_1.default, (req, res) => __awaiter(void 
             const user = { id: nextDevUserId++, username, password, role };
             devUsers.push(user);
             // Generar token
-            const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+            const secret = process.env.JWT_SECRET;
+            if (!secret) {
+                console.error('CRITICAL: JWT_SECRET no configurado');
+                return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+            }
             const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username, role: user.role }, secret, { expiresIn: '24h' });
             return res.status(201).json({
                 message: 'Usuario creado exitosamente (modo desarrollo)',
@@ -78,7 +82,11 @@ router.post('/register', authMiddleware_1.default, (req, res) => __awaiter(void 
             yield (0, auditMiddleware_1.logManualAction)(createdBy, ((_b = req.user) === null || _b === void 0 ? void 0 : _b.username) || 'unknown', 'CREATE', 'user', user.id, { username, role }, req);
         }
         // Generar token
-        const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            console.error('CRITICAL: JWT_SECRET no configurado');
+            return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+        }
         const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username, role: user.role }, secret, { expiresIn: '24h' });
         res.status(201).json({
             message: 'Usuario creado exitosamente',
@@ -186,7 +194,11 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
             const user = devUsers.find(u => u.username === username);
             if (user && user.password === password) {
                 // Generar token
-                const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
+                const secret = process.env.JWT_SECRET;
+                if (!secret) {
+                    console.error('CRITICAL: JWT_SECRET no configurado');
+                    return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+                }
                 const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username, role: user.role }, secret, { expiresIn: '24h' });
                 console.log('✅ Login exitoso en modo desarrollo');
                 return res.json({
@@ -226,8 +238,12 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
         }
         console.log('✓ Contraseña válida');
         // Generar token
-        const secret = process.env.JWT_SECRET || 'secreto_por_defecto';
-        console.log('🔑 Generando token con JWT_SECRET:', secret ? 'configurado' : 'usando default');
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            console.error('CRITICAL: JWT_SECRET no configurado');
+            return res.status(500).json({ error: 'Configuración de seguridad inválida' });
+        }
+        console.log('🔑 Generando token con JWT_SECRET configurado');
         const token = jsonwebtoken_1.default.sign({ id: user.id, username: user.username, role: user.role }, secret, { expiresIn: '24h' });
         console.log('✅ Token generado exitosamente');
         res.json({
