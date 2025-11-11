@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Card, Button } from 'react-bootstrap';
 import { Dispatch } from '../types';
 import * as XLSX from 'xlsx';
@@ -13,15 +13,45 @@ interface Props {
   isAdmin?: boolean;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  price: number | string;
+  unit: string;
+  itbis_rate?: number | string;
+  active: boolean;
+}
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+
 // ... existing code ...
 
 const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = false }) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
 
-  // Función para obtener el nombre del material
-  const getMaterialName = (id: string) => {
-    const materials: Record<string, string> = {
+  // Cargar productos al montar el componente
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        setProducts(data.data || []);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // Función para obtener el nombre del material (soporta IDs antiguos y nuevos)
+  const getMaterialName = (id: string | number): string => {
+    // Mapeo antiguo (para compatibilidad con despachos antiguos)
+    const legacyMaterials: Record<string, string> = {
       'arenaLavada': 'Arena lavada',
       'arenaSinLavar': 'Arena sin lavar',
       'grava': 'Grava',
@@ -33,12 +63,29 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       'base': 'Base',
       'rellenoAmarillento': 'Relleno amarillento'
     };
-    return materials[id] || id;
+    
+    // Si es un string, buscar en mapeo antiguo
+    if (typeof id === 'string' && legacyMaterials[id]) {
+      return legacyMaterials[id];
+    }
+    
+    // Si es un número o string numérico, buscar en productos
+    const productId = typeof id === 'string' ? parseInt(id) : id;
+    if (!isNaN(productId)) {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        return product.name;
+      }
+    }
+    
+    // Fallback: retornar el ID como string
+    return String(id);
   };
 
-  // Función para obtener el precio del material
-  const getMaterialPrice = (id: string) => {
-    const prices: Record<string, number> = {
+  // Función para obtener el precio del material (soporta IDs antiguos y nuevos)
+  const getMaterialPrice = (id: string | number): number => {
+    // Mapeo antiguo (para compatibilidad con despachos antiguos)
+    const legacyPrices: Record<string, number> = {
       'arenaLavada': 1500,
       'arenaSinLavar': 1200,
       'grava': 1800,
@@ -50,7 +97,22 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       'base': 1100,
       'rellenoAmarillento': 700
     };
-    return prices[id] || 0;
+    
+    // Si es un string, buscar en mapeo antiguo
+    if (typeof id === 'string' && legacyPrices[id]) {
+      return legacyPrices[id];
+    }
+    
+    // Si es un número o string numérico, buscar en productos
+    const productId = typeof id === 'string' ? parseInt(id) : id;
+    if (!isNaN(productId)) {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        return typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+      }
+    }
+    
+    return 0;
   };
 
   const handleExport = () => {
@@ -63,9 +125,11 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
           : (typeof d.materials === 'string' ? JSON.parse(d.materials) : []);
         
         // Calcular detalles de materiales
-        const materialNames = materials.map((material: { id: string; quantity: number }) =>
-          getMaterialName(material.id)
-        );
+        const materialNames = materials.map((material: { id: string | number; quantity: number }) => {
+          const name = getMaterialName(material.id);
+          console.log(`📄 Material ID: ${material.id}, Nombre: ${name}`);
+          return name;
+        });
         const materialDetails = materialNames.join(', ');
         
         return {
@@ -243,7 +307,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       yPosition += 5;
 
       // Tabla de materiales
-      const tableData = materials.map((material: { id: string; quantity: number }) => [
+      const tableData = materials.map((material: { id: string | number; quantity: number }) => [
         getMaterialName(material.id),
         material.quantity.toString(),
         `RD$ ${getMaterialPrice(material.id).toFixed(2)}`,

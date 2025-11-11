@@ -17,6 +17,15 @@ interface FilterOptions {
   maxAmount: number;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  price: number | string;
+  unit: string;
+  itbis_rate?: number | string;
+  active: boolean;
+}
+
 const AdvancedReportsView: React.FC = () => {
   const [dispatches, setDispatches] = useState<Dispatch[]>([]);
   const [filteredDispatches, setFilteredDispatches] = useState<Dispatch[]>([]);
@@ -24,6 +33,7 @@ const AdvancedReportsView: React.FC = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [equipment, setEquipment] = useState<any[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [filters, setFilters] = useState<FilterOptions>({
     dateFrom: '',
@@ -40,18 +50,19 @@ const AdvancedReportsView: React.FC = () => {
 
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
 
-  // Cargar despachos, empleados, equipos y operarios
+  // Cargar despachos, empleados, equipos, operarios y productos
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
         const headers = { 'Authorization': `Bearer ${token}` };
 
-        const [dispatchRes, employeeRes, equipmentRes, operatorRes] = await Promise.all([
+        const [dispatchRes, employeeRes, equipmentRes, operatorRes, productRes] = await Promise.all([
           fetch(`${API_URL}/dispatches`, { headers }),
           fetch(`${API_URL}/auth/users`, { headers }),
           fetch(`${API_URL}/equipment`, { headers }),
-          fetch(`${API_URL}/operators`, { headers })
+          fetch(`${API_URL}/operators`, { headers }),
+          fetch(`${API_URL}/products`, { headers })
         ]);
 
         if (dispatchRes.ok) {
@@ -73,6 +84,11 @@ const AdvancedReportsView: React.FC = () => {
         if (operatorRes.ok) {
           const data = await operatorRes.json();
           setOperators(Array.isArray(data) ? data : (data.data || []));
+        }
+
+        if (productRes.ok) {
+          const data = await productRes.json();
+          setProducts(data.data || []);
         }
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -151,8 +167,8 @@ const AdvancedReportsView: React.FC = () => {
   };
 
   const exportToExcel = () => {
-    // Mapeo de nombres de materiales
-    const materialNames: Record<string, string> = {
+    // Mapeo de nombres de materiales (legacy)
+    const legacyMaterialNames: Record<string, string> = {
       'arenaLavada': 'Arena lavada',
       'arenaSinLavar': 'Arena sin lavar',
       'grava': 'Grava',
@@ -164,19 +180,44 @@ const AdvancedReportsView: React.FC = () => {
       'base': 'Base',
       'rellenoAmarillento': 'Relleno amarillento'
     };
-    const safeParseMaterials = (m: any): { id: string; quantity: number }[] => (
+    
+    // Función para obtener nombre de material (soporta IDs antiguos y nuevos)
+    const getMaterialName = (id: string | number): string => {
+      // Si es un string, buscar en mapeo antiguo
+      if (typeof id === 'string' && legacyMaterialNames[id]) {
+        return legacyMaterialNames[id];
+      }
+      
+      // Si es un número o string numérico, buscar en productos
+      const productId = typeof id === 'string' ? parseInt(id) : id;
+      if (!isNaN(productId)) {
+        const product = products.find(p => p.id === productId);
+        if (product) {
+          return product.name;
+        }
+      }
+      
+      // Fallback: retornar el ID como string
+      return String(id);
+    };
+    
+    const safeParseMaterials = (m: any): { id: string | number; quantity: number }[] => (
       Array.isArray(m) ? m : (typeof m === 'string' ? JSON.parse(m) : [])
     );
 
     const data = filteredDispatches.map(d => {
       const materials = safeParseMaterials(d.materials);
       let materialNameOnly = 'N/A';
-      const matRaw = (d as any).materials;
+      
       if (materials && materials.length > 0) {
         const first = materials[0];
-        materialNameOnly = materialNames[first.id] || first.id;
-      } else if (typeof matRaw === 'string' && matRaw) {
-        materialNameOnly = matRaw.split(':')[0].trim();
+        materialNameOnly = getMaterialName(first.id);
+        console.log(`📄 Excel - Material ID: ${first.id}, Nombre: ${materialNameOnly}`);
+      } else {
+        const matRaw = (d as any).materials;
+        if (typeof matRaw === 'string' && matRaw) {
+          materialNameOnly = matRaw.split(':')[0].trim();
+        }
       }
 
       return {
