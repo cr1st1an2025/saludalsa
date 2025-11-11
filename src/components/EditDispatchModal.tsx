@@ -35,7 +35,7 @@ const EditDispatchModal: React.FC<Props> = ({ dispatch, show, onHide, onSave }) 
   return (
     <Modal show={show} onHide={onHide} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>Editar Despacho #{dispatch.despachoNo}</Modal.Title>
+        <Modal.Title>Editar Despacho</Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
@@ -201,6 +201,26 @@ const EditDispatchModal: React.FC<Props> = ({ dispatch, show, onHide, onSave }) 
                   value={formData.total || ''}
                   onChange={handleInputChange}
                   step="0.01"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onHide}>
+            Cancelar
+          </Button>
+          <Button variant="primary" type="submit">
+            Guardar Cambios
+          </Button>
+        </Modal.Footer>
+      </Form>
+    </Modal>
+  );
+};
+
+export default EditDispatchModal;
                   required
                 />
               </Form.Group>

@@ -79,10 +79,10 @@ const DispatchNumberConfig: React.FC = () => {
             onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
           />
           <Form.Text className="text-muted">
-            <strong>⚠️ Importante:</strong> Al cambiar este número, todos los <strong>nuevos despachos</strong> comenzarán 
-            a numerarse desde este punto. Los despachos ya creados NO se verán afectados.<br/>
-            <strong>Ejemplo:</strong> Si configuras el número 5000, el próximo despacho será <strong>0005000</strong>, 
-            luego 0005001, 0005002, etc.
+            <strong>ℹ️ Información:</strong> Este número se usa cuando NO hay despachos en el sistema.<br/>
+            <strong>📝 Nota:</strong> También puedes editar manualmente el número de cualquier despacho 
+            usando el botón <strong>"Editar"</strong> en el historial. Los siguientes despachos continuarán 
+            automáticamente desde el último número usado.
           </Form.Text>
         </Form.Group>
 
