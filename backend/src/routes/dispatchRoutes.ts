@@ -263,6 +263,140 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
+// PUT /api/dispatches/:id - Editar despacho completo (solo admin)
+router.put('/:id', async (req: AuthRequest, res) => {
+  // Verificar que el usuario sea admin
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden editar despachos.' });
+  }
+  
+  const id = parseInt(req.params.id);
+  const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
+  
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+  
+  // Convertir campos de texto a MAYÚSCULAS
+  const camionUpper = camion ? camion.toUpperCase() : '';
+  const placaUpper = placa ? placa.toUpperCase() : '';
+  const colorUpper = color ? color.toUpperCase() : '';
+  const fichaUpper = ficha ? ficha.toUpperCase() : '';
+  const numeroOrdenUpper = numeroOrden ? numeroOrden.toUpperCase() : '';
+  const ticketOrdenUpper = ticketOrden ? ticketOrden.toUpperCase() : '';
+  const choferUpper = chofer ? chofer.toUpperCase() : '';
+  const clienteUpper = cliente ? cliente.toUpperCase() : '';
+  
+  // Validación básica
+  if (!fecha || !hora || !camionUpper || !placaUpper || !clienteUpper) {
+    return res.status(400).json({ error: 'Faltan campos requeridos' });
+  }
+  
+  // Convertir y validar tipos
+  const finalTotal = typeof total === 'string' ? parseFloat(total) : total;
+  const finalM3 = m3 && m3 > 0 ? (typeof m3 === 'string' ? parseFloat(m3) : m3) : null;
+  const finalUserId = userId && userId > 0 ? userId : 1;
+  const finalEquipmentId = equipmentId && equipmentId > 0 ? equipmentId : null;
+  const finalOperatorId = operatorId && operatorId > 0 ? operatorId : null;
+  
+  if (isNaN(finalTotal) || finalTotal < 0) {
+    return res.status(400).json({ error: 'Total inválido' });
+  }
+  
+  // Validar y procesar materials
+  let finalMaterials;
+  if (Array.isArray(materials)) {
+    finalMaterials = materials;
+  } else if (typeof materials === 'string') {
+    try {
+      finalMaterials = JSON.parse(materials);
+    } catch (e) {
+      return res.status(400).json({ error: 'Formato de materiales inválido' });
+    }
+  } else {
+    finalMaterials = [];
+  }
+  
+  const disableAuth = process.env.DISABLE_AUTH === 'true';
+  
+  if (disableAuth) {
+    const dispatch = devDispatches.find(d => d.id === id);
+    if (!dispatch) {
+      return res.status(404).json({ error: 'Despacho no encontrado' });
+    }
+    
+    Object.assign(dispatch, {
+      fecha, hora,
+      camion: camionUpper, placa: placaUpper, color: colorUpper, ficha: fichaUpper,
+      numeroOrden: numeroOrdenUpper, ticketOrden: ticketOrdenUpper, chofer: choferUpper,
+      m3: finalM3, materials: finalMaterials, cliente: clienteUpper, celular,
+      total: finalTotal, userId: finalUserId, equipmentId: finalEquipmentId, operatorId: finalOperatorId
+    });
+    
+    return res.json({ message: 'Despacho actualizado correctamente' });
+  }
+  
+  const client = await db.connect();
+  
+  try {
+    // Actualizar camión si cambió la placa
+    if (placaUpper) {
+      await client.query(
+        `INSERT INTO camiones (placa, marca, color, ficha, m3, estado, createdat, updatedat)
+         VALUES ($1, $2, $3, $4, $5, 'activo', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+         ON CONFLICT (placa) 
+         DO UPDATE SET 
+           marca = COALESCE($2, camiones.marca),
+           color = COALESCE($3, camiones.color),
+           ficha = COALESCE($4, camiones.ficha),
+           m3 = COALESCE($5, camiones.m3),
+           updatedat = CURRENT_TIMESTAMP`,
+        [placaUpper, camionUpper || 'SIN ESPECIFICAR', colorUpper, fichaUpper, finalM3]
+      );
+    }
+    
+    // Actualizar despacho
+    const sql = `UPDATE dispatches 
+                 SET fecha = $1, hora = $2, camion = $3, placa = $4, color = $5, ficha = $6, 
+                     numeroOrden = $7, ticketOrden = $8, chofer = $9, m3 = $10, 
+                     materials = $11, cliente = $12, celular = $13, total = $14, 
+                     userId = $15, equipmentId = $16, operatorId = $17
+                 WHERE id = $18`;
+    const params = [
+      fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper,
+      numeroOrdenUpper, ticketOrdenUpper, choferUpper, finalM3,
+      JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal,
+      finalUserId, finalEquipmentId, finalOperatorId, id
+    ];
+    
+    const result = await client.query(sql, params);
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Despacho no encontrado' });
+    }
+    
+    // Registrar en auditoría
+    if (req.user) {
+      await logManualAction(
+        req.user.id,
+        req.user.username,
+        'UPDATE',
+        'dispatch',
+        id,
+        { cliente: clienteUpper, total: finalTotal },
+        req
+      );
+    }
+    
+    res.json({ message: 'Despacho actualizado correctamente' });
+  } catch (err) {
+    console.error('❌ Error al actualizar despacho:', err);
+    res.status(500).json({ error: 'Error al actualizar despacho', details: (err as Error).message });
+  } finally {
+    client.release();
+  }
+});
+
 // PUT /api/dispatches/:id/number (solo admin puede cambiar el número)
 router.put('/:id/number', async (req: AuthRequest, res) => {
   // Verificar que el usuario sea admin

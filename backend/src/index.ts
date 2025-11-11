@@ -63,6 +63,7 @@ import clientRoutes from './routes/clientRoutes';
 import caminoRoutes from './routes/caminoRoutes';
 import productRoutes from './routes/productRoutes';
 import clientPriceRoutes from './routes/clientPriceRoutes';
+import configRoutes from './routes/configRoutes';
 import authRoutes from './routes/authRoutes';
 import auditRoutes from './routes/auditRoutes';
 import authenticateToken from './middleware/authMiddleware';
@@ -74,6 +75,7 @@ import { migrateAddTicketOrden } from './migrations/add-ticket-orden';
 import { migrateAddItbisToProducts } from './migrations/add-itbis-to-products';
 import { migrateCreateClientPrices } from './migrations/create-client-prices';
 import { migrateAddClientFields } from './migrations/add-client-fields';
+import { migrateCreateConfigTable } from './migrations/create-config-table';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -261,7 +263,8 @@ app.use('/api/operators', authenticateToken, operatorRoutes);
 app.use('/api/companies', authenticateToken, companyRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
 app.use('/api/client-prices', authenticateToken, clientPriceRoutes);
-app.use('/api/camiones', caminoRoutes);
+app.use('/api/config', authenticateToken, checkRole('admin'), configRoutes); // Solo admin
+app.use('/api/caminos', caminoRoutes);
 app.use('/api/audit', checkRole('admin'), auditRoutes); // Logs de auditoría solo para admin
 app.use('/api/clients', clientRoutes); // Permitir sin autenticación para facilitar auto-registro
 
@@ -285,6 +288,7 @@ if (process.env.VERCEL !== '1') {
       await migrateAddItbisToProducts(); // Quinto: agregar ITBIS a products
       await migrateCreateClientPrices(); // Sexto: crear tabla client_prices
       await migrateAddClientFields(); // Séptimo: agregar campos a clients
+      await migrateCreateConfigTable(); // Octavo: crear tabla config
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }
