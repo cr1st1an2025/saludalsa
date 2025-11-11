@@ -4,14 +4,14 @@ import { Card, ListGroup, Form, Button, Modal } from 'react-bootstrap';
 interface Company {
   id: number;
   name: string;
-  address: string;
+  rnc: string; // RNC
+  address: string; // Dirección (ahora para dirección comercial)
+  domicilio: string; // Domicilio fiscal
   phone: string;
   email: string;
-  rnc: string; // RNC
-  domicilio: string; // Domicilio fiscal
+  contactos: string; // Contactos adicionales
   tipo_impositivo: number; // Porcentaje de impuesto
   exento: boolean; // Si está exento de impuestos
-  contactos: string; // Contactos adicionales
 }
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
@@ -184,6 +184,7 @@ const CompanyManager: React.FC = () => {
                 name="name"
                 value={formData.name} 
                 onChange={handleInputChange} 
+                placeholder="Ej: AGRECOMSA DEL ESTE 1800 SC SRL"
                 required
               />
             </Form.Group>
@@ -195,7 +196,7 @@ const CompanyManager: React.FC = () => {
                 name="rnc"
                 value={formData.rnc} 
                 onChange={handleInputChange}
-                placeholder="Registro Nacional de Contribuyentes"
+                placeholder="Ej: 132574508"
                 required
               />
             </Form.Group>
@@ -206,7 +207,8 @@ const CompanyManager: React.FC = () => {
                 type="text" 
                 name="address"
                 value={formData.address} 
-                onChange={handleInputChange} 
+                onChange={handleInputChange}
+                placeholder="Ej: AVENIDA ABRAHAM LINCOLN 701"
               />
             </Form.Group>
             
@@ -227,7 +229,8 @@ const CompanyManager: React.FC = () => {
                 type="text" 
                 name="phone"
                 value={formData.phone} 
-                onChange={handleInputChange} 
+                onChange={handleInputChange}
+                placeholder="Teléfono de contacto"
               />
             </Form.Group>
             
@@ -237,7 +240,8 @@ const CompanyManager: React.FC = () => {
                 type="email" 
                 name="email"
                 value={formData.email} 
-                onChange={handleInputChange} 
+                onChange={handleInputChange}
+                placeholder="Correo electrónico"
               />
             </Form.Group>
             
@@ -245,7 +249,7 @@ const CompanyManager: React.FC = () => {
               <Form.Label>Contactos Adicionales</Form.Label>
               <Form.Control 
                 as="textarea"
-                rows={2}
+                rows={3}
                 name="contactos"
                 value={formData.contactos} 
                 onChange={handleInputChange}
@@ -260,11 +264,14 @@ const CompanyManager: React.FC = () => {
                 name="tipo_impositivo"
                 value={formData.tipo_impositivo} 
                 onChange={handleInputChange}
-                step="0.01"
+                step="1"
                 min="0"
                 max="100"
+                placeholder="Ej: 0 o 18"
               />
-              <Form.Text className="text-muted">Porcentaje de impuesto aplicable (ej: 18 para ITBIS 18%)</Form.Text>
+              <Form.Text className="text-muted">
+                Porcentaje de impuesto aplicable (ej: 18 para ITBIS 18%)
+              </Form.Text>
             </Form.Group>
             
             <Form.Group className="mb-3">
