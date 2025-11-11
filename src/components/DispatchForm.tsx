@@ -158,7 +158,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
       }
       return acc;
     }, 0);
-  }, [selectedMaterials]);
+  }, [selectedMaterials, materialsData]);
 
   // Validar si se excede la capacidad del camión
   useEffect(() => {
