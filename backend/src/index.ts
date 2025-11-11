@@ -169,6 +169,66 @@ app.get('/api/test', (req, res) => {
   res.json({ message: 'API funcionando correctamente' });
 });
 
+// Endpoint temporal para crear tabla products
+app.post('/api/init-products', async (req, res) => {
+  try {
+    const { Pool } = require('pg');
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    const client = await pool.connect();
+    
+    // Crear tabla products
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS products (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL DEFAULT 0,
+        unit VARCHAR(20) DEFAULT 'm³',
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
+    // Verificar si hay productos
+    const count = await client.query('SELECT COUNT(*) as count FROM products');
+    
+    // Insertar productos iniciales si está vacía
+    if (parseInt(count.rows[0].count) === 0) {
+      await client.query(`
+        INSERT INTO products (name, price, unit) VALUES
+        ('Arena lavada', 1500.00, 'm³'),
+        ('Arena sin lavar', 1200.00, 'm³'),
+        ('Grava', 1800.00, 'm³'),
+        ('Sub-base', 1000.00, 'm³'),
+        ('Grava Arena', 1600.00, 'm³'),
+        ('Granzote', 2000.00, 'm³'),
+        ('Gravillín', 2200.00, 'm³'),
+        ('Cascajo gris (Relleno)', 800.00, 'm³'),
+        ('Base', 1100.00, 'm³'),
+        ('Relleno amarillento', 700.00, 'm³')
+      `);
+    }
+    
+    // Obtener productos
+    const products = await client.query('SELECT * FROM products ORDER BY name');
+    client.release();
+    await pool.end();
+    
+    res.json({ 
+      success: true, 
+      message: 'Tabla products inicializada',
+      count: products.rows.length,
+      products: products.rows
+    });
+  } catch (error: any) {
+    console.error('Error inicializando products:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Endpoint de test de login con debugging
 app.post('/api/test-login', async (req, res) => {
   try {
