@@ -40,6 +40,26 @@ const EditDispatchModal: React.FC<Props> = ({ dispatch, show, onHide, onSave }) 
       <Form onSubmit={handleSubmit}>
         <Modal.Body>
           <Row className="mb-3">
+            <Col md={12}>
+              <Form.Group>
+                <Form.Label>Número de Despacho *</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="despachoNo"
+                  value={formData.despachoNo || ''}
+                  onChange={handleInputChange}
+                  placeholder="Ej: 0005000"
+                  maxLength={7}
+                  required
+                />
+                <Form.Text className="text-warning">
+                  ⚠️ <strong>Importante:</strong> Al cambiar este número, los próximos despachos automáticos continuarán desde este número + 1
+                </Form.Text>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row className="mb-3">
             <Col md={6}>
               <Form.Group>
                 <Form.Label>Fecha *</Form.Label>
@@ -201,26 +221,6 @@ const EditDispatchModal: React.FC<Props> = ({ dispatch, show, onHide, onSave }) 
                   value={formData.total || ''}
                   onChange={handleInputChange}
                   step="0.01"
-                  required
-                />
-              </Form.Group>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
-            Cancelar
-          </Button>
-          <Button variant="primary" type="submit">
-            Guardar Cambios
-          </Button>
-        </Modal.Footer>
-      </Form>
-    </Modal>
-  );
-};
-
-export default EditDispatchModal;
                   required
                 />
               </Form.Group>
