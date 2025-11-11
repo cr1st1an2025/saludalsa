@@ -31,18 +31,19 @@ const initialFormState = {
   caminoId: 0,
 };
 
-const materialsData = [
-    { id: 'arenaLavada', label: 'Arena lavada', price: 1500 },
-    { id: 'arenaSinLavar', label: 'Arena sin lavar', price: 1200 },
-    { id: 'grava', label: 'Grava', price: 1800 },
-    { id: 'subBase', label: 'Sub-base', price: 1000 },
-    { id: 'gravaArena', label: 'Grava Arena', price: 1600 },
-    { id: 'granzote', label: 'Granzote', price: 2000 },
-    { id: 'gravillin', label: 'Gravillín', price: 2200 },
-    { id: 'cascajoGris', label: 'Cascajo gris (Relleno)', price: 800 },
-    { id: 'base', label: 'Base', price: 1100 },
-    { id: 'rellenoAmarillento', label: 'Relleno amarillento', price: 700 },
-  ];
+interface Product {
+  id: number;
+  name: string;
+  price: number | string;
+  unit: string;
+  active: boolean;
+}
+
+interface MaterialData {
+  id: string;
+  label: string;
+  price: number;
+}
 
 interface Props {
   onSubmit: (dispatch: Omit<Dispatch, 'id'>) => void;
@@ -56,6 +57,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
   const [users, setUsers] = useState<AdminData[]>([]);
   const [equipment, setEquipment] = useState<AdminData[]>([]);
   const [operators, setOperators] = useState<AdminData[]>([]);
+  const [materialsData, setMaterialsData] = useState<MaterialData[]>([]);
   const [capacidadExcedida, setCapacidadExcedida] = useState(false); // Nueva validación
 
   useEffect(() => {
@@ -70,6 +72,35 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     const headers = {
       'Authorization': `Bearer ${token}`
     };
+
+    // Cargar productos desde la API
+    fetch(`${API_URL}/products?active=true`, { headers })
+      .then(res => {
+        if (res.status === 401) {
+          console.error('❌ Token expirado o inválido. Redirigiendo al login...');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          throw new Error('Unauthorized');
+        }
+        return res.json();
+      })
+      .then(data => {
+        const products: Product[] = data.data || [];
+        // Convertir productos a formato MaterialData
+        const materials: MaterialData[] = products.map(p => ({
+          id: String(p.id),
+          label: p.name,
+          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price
+        }));
+        setMaterialsData(materials);
+        console.log('📦 Productos cargados:', materials);
+      })
+      .catch(err => {
+        if (err.message !== 'Unauthorized') {
+          console.error('Error al cargar productos:', err);
+        }
+      });
 
     // Cargar datos con manejo de errores 401
     fetch(`${API_URL}/users`, { headers })
