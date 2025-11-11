@@ -284,13 +284,21 @@ router.post('/', async (req: AuthRequest, res) => {
 
 // PUT /api/dispatches/:id - Editar despacho completo (solo admin)
 router.put('/:id', async (req: AuthRequest, res) => {
+  console.log('📥 PUT /api/dispatches/:id - Recibido');
+  console.log('ID del parámetro:', req.params.id);
+  console.log('Body completo:', req.body);
+  
   // Verificar que el usuario sea admin
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden editar despachos.' });
   }
   
   const id = parseInt(req.params.id);
-  const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
+  const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId, despachoNo } = req.body;
+  
+  console.log('🔢 ID parseado:', id);
+  console.log('📅 Fecha recibida:', fecha);
+  console.log('🔢 despachoNo recibido:', despachoNo);
   
   if (isNaN(id)) {
     return res.status(400).json({ error: 'ID inválido' });
@@ -376,17 +384,20 @@ router.put('/:id', async (req: AuthRequest, res) => {
     
     // Actualizar despacho
     const sql = `UPDATE dispatches 
-                 SET fecha = $1, hora = $2, camion = $3, placa = $4, color = $5, ficha = $6, 
-                     numeroOrden = $7, ticketOrden = $8, chofer = $9, m3 = $10, 
-                     materials = $11, cliente = $12, celular = $13, total = $14, 
-                     userId = $15, equipmentId = $16, operatorId = $17
-                 WHERE id = $18`;
+                 SET despachoNo = $1, fecha = $2, hora = $3, camion = $4, placa = $5, color = $6, ficha = $7, 
+                     numeroOrden = $8, ticketOrden = $9, chofer = $10, m3 = $11, 
+                     materials = $12, cliente = $13, celular = $14, total = $15, 
+                     userId = $16, equipmentId = $17, operatorId = $18
+                 WHERE id = $19`;
     const params = [
+      despachoNo, // Número de despacho (puede ser editado por admin)
       fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper,
       numeroOrdenUpper, ticketOrdenUpper, choferUpper, finalM3,
       JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal,
       finalUserId, finalEquipmentId, finalOperatorId, id
     ];
+    
+    console.log('💾 Ejecutando UPDATE con params:', params);
     
     const result = await client.query(sql, params);
     

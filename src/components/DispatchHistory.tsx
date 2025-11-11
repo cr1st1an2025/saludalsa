@@ -271,6 +271,16 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
       const token = localStorage.getItem('token');
       
+      // VALIDACIÓN CRITICA: Verificar que el ID existe
+      if (!updatedDispatch.id) {
+        alert('❌ Error: No se puede actualizar un despacho sin ID');
+        console.error('Despacho sin ID:', updatedDispatch);
+        return;
+      }
+      
+      console.log('📤 Actualizando despacho ID:', updatedDispatch.id);
+      console.log('📝 Datos a enviar:', updatedDispatch);
+      
       const response = await fetch(`${API_URL}/dispatches/${updatedDispatch.id}`, {
         method: 'PUT',
         headers: {
@@ -281,7 +291,9 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       });
       
       if (!response.ok) {
-        throw new Error('Error al actualizar el despacho');
+        const errorData = await response.json();
+        console.error('❌ Error del servidor:', errorData);
+        throw new Error(errorData.error || 'Error al actualizar el despacho');
       }
       
       alert('Despacho actualizado correctamente');
@@ -289,7 +301,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       window.location.reload();
     } catch (error) {
       console.error('Error al guardar despacho:', error);
-      alert('Error al guardar los cambios');
+      alert('Error al guardar los cambios: ' + (error as Error).message);
     }
   };
 
