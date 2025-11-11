@@ -36,6 +36,7 @@ interface Product {
   name: string;
   price: number | string;
   unit: string;
+  itbis_rate?: number | string; // ITBIS: 0.00 o 0.18
   active: boolean;
 }
 
@@ -43,6 +44,7 @@ interface MaterialData {
   id: string;
   label: string;
   price: number;
+  itbisRate: number; // ITBIS almacenado como decimal
 }
 
 interface Props {
@@ -92,7 +94,8 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
         const materials: MaterialData[] = products.map(p => ({
           id: String(p.id),
           label: p.name,
-          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price
+          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price,
+          itbisRate: p.itbis_rate ? (typeof p.itbis_rate === 'string' ? parseFloat(p.itbis_rate) : p.itbis_rate) : 0
         }));
         setMaterialsData(materials);
         console.log('📦 Productos cargados:', materials);
@@ -189,8 +192,8 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     }, 0);
   }, [selectedMaterials]);
 
-  // Calcular total: Precio × M³ seleccionados - Descuento
-  const total = useMemo(() => {
+  // Calcular subtotal, ITBIS, descuento y total
+  const calculations = useMemo(() => {
     const subtotal = Object.keys(selectedMaterials).reduce((acc, key) => {
       const material = materialsData.find(m => m.id === key);
       if (material && selectedMaterials[key].selected) {
@@ -199,12 +202,34 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
       return acc;
     }, 0);
     
-    // Aplicar descuento del cliente
-    const discountAmount = (subtotal * clientDiscount) / 100;
-    const totalWithDiscount = subtotal - discountAmount;
+    // Calcular ITBIS por material
+    const itbisAmount = Object.keys(selectedMaterials).reduce((acc, key) => {
+      const material = materialsData.find(m => m.id === key);
+      if (material && selectedMaterials[key].selected) {
+        const materialSubtotal = material.price * selectedMaterials[key].quantity;
+        const materialItbis = materialSubtotal * material.itbisRate;
+        return acc + materialItbis;
+      }
+      return acc;
+    }, 0);
     
-    return totalWithDiscount;
+    // Subtotal + ITBIS
+    const subtotalConItbis = subtotal + itbisAmount;
+    
+    // Aplicar descuento del cliente sobre (Subtotal + ITBIS)
+    const discountAmount = (subtotalConItbis * clientDiscount) / 100;
+    const totalFinal = subtotalConItbis - discountAmount;
+    
+    return {
+      subtotal,
+      itbisAmount,
+      subtotalConItbis,
+      discountAmount,
+      total: totalFinal
+    };
   }, [selectedMaterials, materialsData, clientDiscount]);
+  
+  const total = calculations.total;
 
   // Validar si se excede la capacidad del camión
   useEffect(() => {
@@ -619,12 +644,38 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
           <Row className="mb-3">
             <Form.Group as={Col} md={6} controlId="total">
               <Form.Label>Total a Pagar (RD$)</Form.Label>
-              <Form.Control type="number" readOnly value={total.toFixed(2)} />
-              {clientDiscount > 0 && (
-                <Form.Text className="text-success">
-                  ✅ Descuento aplicado: {clientDiscount.toFixed(2)}% (Cliente: {formData.cliente})
-                </Form.Text>
-              )}
+              <Form.Control type="number" readOnly value={total.toFixed(2)} className="fw-bold" />
+              
+              {/* Desglose de cálculos */}
+              <div className="mt-2" style={{ fontSize: '0.9em' }}>
+                <div className="d-flex justify-content-between text-muted">
+                  <span>Subtotal:</span>
+                  <span>RD$ {calculations.subtotal.toFixed(2)}</span>
+                </div>
+                {calculations.itbisAmount > 0 && (
+                  <div className="d-flex justify-content-between text-success">
+                    <span>💰 ITBIS (18%):</span>
+                    <span>RD$ {calculations.itbisAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                {clientDiscount > 0 && (
+                  <>
+                    <div className="d-flex justify-content-between text-muted">
+                      <span>Subtotal + ITBIS:</span>
+                      <span>RD$ {calculations.subtotalConItbis.toFixed(2)}</span>
+                    </div>
+                    <div className="d-flex justify-content-between text-success">
+                      <span>✅ Descuento ({clientDiscount.toFixed(2)}%):</span>
+                      <span>- RD$ {calculations.discountAmount.toFixed(2)}</span>
+                    </div>
+                  </>
+                )}
+                {clientDiscount > 0 && (
+                  <Form.Text className="text-success d-block mt-1">
+                    Cliente: {formData.cliente}
+                  </Form.Text>
+                )}
+              </div>
             </Form.Group>
           </Row>
 

@@ -6,6 +6,7 @@ interface Product {
   name: string;
   price: number | string; // Puede venir como string desde la BD
   unit: string;
+  itbis_rate?: number | string; // ITBIS: 0.00 (0%) o 0.18 (18%)
   active: boolean;
 }
 
@@ -16,8 +17,8 @@ const ProductPriceManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', price: 0, unit: 'm³' });
-  const [newProduct, setNewProduct] = useState({ name: '', price: 0, unit: 'm³' });
+  const [editForm, setEditForm] = useState({ name: '', price: 0, unit: 'm³', itbisRate: 0 });
+  const [newProduct, setNewProduct] = useState({ name: '', price: 0, unit: 'm³', itbisRate: 0 });
   const [message, setMessage] = useState<{type: string, text: string} | null>(null);
 
   useEffect(() => {
@@ -56,7 +57,8 @@ const ProductPriceManager: React.FC = () => {
     setEditForm({ 
       name: product.name, 
       price: typeof product.price === 'string' ? parseFloat(product.price) : product.price, 
-      unit: product.unit 
+      unit: product.unit,
+      itbisRate: product.itbis_rate ? (typeof product.itbis_rate === 'string' ? parseFloat(product.itbis_rate) : product.itbis_rate) : 0
     });
   };
 
@@ -106,7 +108,7 @@ const ProductPriceManager: React.FC = () => {
         setMessage({ type: 'success', text: 'Producto agregado correctamente' });
         fetchProducts();
         setShowAddModal(false);
-        setNewProduct({ name: '', price: 0, unit: 'm³' });
+        setNewProduct({ name: '', price: 0, unit: 'm³', itbisRate: 0 });
       } else {
         setMessage({ type: 'danger', text: 'Error al agregar producto' });
       }
@@ -169,12 +171,17 @@ const ProductPriceManager: React.FC = () => {
               <th>Producto</th>
               <th>Precio (RD$)</th>
               <th>Unidad</th>
+              <th>ITBIS (%)</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {products.map(product => (
+            {products.map(product => {
+              const itbisRate = product.itbis_rate ? (typeof product.itbis_rate === 'string' ? parseFloat(product.itbis_rate) : product.itbis_rate) : 0;
+              const itbisPercent = (itbisRate * 100).toFixed(0);
+              
+              return (
               <tr key={product.id} style={{ opacity: product.active ? 1 : 0.5 }}>
                 <td>
                   {editingId === product.id ? (
@@ -209,6 +216,21 @@ const ProductPriceManager: React.FC = () => {
                     />
                   ) : (
                     product.unit
+                  )}
+                </td>
+                <td>
+                  {editingId === product.id ? (
+                    <Form.Select
+                      value={editForm.itbisRate}
+                      onChange={(e) => setEditForm({ ...editForm, itbisRate: parseFloat(e.target.value) })}
+                    >
+                      <option value={0}>0% (Productos naturales)</option>
+                      <option value={0.18}>18% (Productos procesados)</option>
+                    </Form.Select>
+                  ) : (
+                    <span style={{ fontWeight: itbisRate > 0 ? 'bold' : 'normal', color: itbisRate > 0 ? '#28a745' : '#6c757d' }}>
+                      {itbisPercent}%
+                    </span>
                   )}
                 </td>
                 <td>{product.active ? '✅ Activo' : '❌ Inactivo'}</td>
@@ -254,7 +276,7 @@ const ProductPriceManager: React.FC = () => {
                   )}
                 </td>
               </tr>
-            ))}
+            );})}
           </tbody>
         </Table>
       </Card.Body>
@@ -295,6 +317,19 @@ const ProductPriceManager: React.FC = () => {
               <option value="unit">unidad</option>
               <option value="kg">kg (kilogramos)</option>
             </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>ITBIS *</Form.Label>
+            <Form.Select
+              value={newProduct.itbisRate}
+              onChange={(e) => setNewProduct({ ...newProduct, itbisRate: parseFloat(e.target.value) })}
+            >
+              <option value={0}>0% - Productos naturales (Relleno, Cascajo, etc.)</option>
+              <option value={0.18}>18% - Productos procesados (Arena lavada, Gravillín, Base, etc.)</option>
+            </Form.Select>
+            <Form.Text className="text-muted">
+              Productos procesados llevan 18% ITBIS, productos naturales 0%
+            </Form.Text>
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
