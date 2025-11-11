@@ -13,8 +13,8 @@ interface AdminData {
 
 const initialFormState = {
   despachoNo: '',
-  fecha: new Date().toISOString().split('T')[0],
-  hora: new Date().toTimeString().split(' ')[0].substring(0, 5),
+  fecha: new Date().toLocaleDateString('en-CA'), // Formato YYYY-MM-DD en zona horaria local
+  hora: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), // Formato HH:mm en zona horaria local
   camion: '',
   placa: '',
   color: '',
