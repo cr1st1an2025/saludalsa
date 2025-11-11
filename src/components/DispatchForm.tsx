@@ -58,6 +58,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
   const [equipment, setEquipment] = useState<AdminData[]>([]);
   const [operators, setOperators] = useState<AdminData[]>([]);
   const [materialsData, setMaterialsData] = useState<MaterialData[]>([]);
+  const [clientDiscount, setClientDiscount] = useState<number>(0); // Descuento del cliente
   const [capacidadExcedida, setCapacidadExcedida] = useState(false); // Nueva validación
 
   useEffect(() => {
@@ -139,6 +140,45 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     }
   }, [user]);
 
+  // Buscar descuento del cliente cuando cambie el nombre
+  useEffect(() => {
+    const fetchClientDiscount = async () => {
+      if (!formData.cliente || formData.cliente.trim() === '') {
+        setClientDiscount(0);
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/clients`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        const clients = data.data || [];
+        
+        // Buscar cliente por nombre (case-insensitive)
+        const client = clients.find((c: any) => 
+          c.name.toUpperCase() === formData.cliente.toUpperCase()
+        );
+        
+        if (client && client.descuento) {
+          const discount = typeof client.descuento === 'string' 
+            ? parseFloat(client.descuento) 
+            : client.descuento;
+          setClientDiscount(discount);
+          console.log(`💰 Descuento del cliente "${client.name}": ${discount}%`);
+        } else {
+          setClientDiscount(0);
+        }
+      } catch (error) {
+        console.error('Error al buscar descuento del cliente:', error);
+        setClientDiscount(0);
+      }
+    };
+
+    fetchClientDiscount();
+  }, [formData.cliente]);
+
   // Calcular M³ total seleccionado
   const m3Seleccionados = useMemo(() => {
     return Object.keys(selectedMaterials).reduce((acc, key) => {
@@ -149,16 +189,22 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     }, 0);
   }, [selectedMaterials]);
 
-  // Calcular total: Precio × M³ seleccionados
+  // Calcular total: Precio × M³ seleccionados - Descuento
   const total = useMemo(() => {
-    return Object.keys(selectedMaterials).reduce((acc, key) => {
+    const subtotal = Object.keys(selectedMaterials).reduce((acc, key) => {
       const material = materialsData.find(m => m.id === key);
       if (material && selectedMaterials[key].selected) {
         return acc + (material.price * selectedMaterials[key].quantity);
       }
       return acc;
     }, 0);
-  }, [selectedMaterials, materialsData]);
+    
+    // Aplicar descuento del cliente
+    const discountAmount = (subtotal * clientDiscount) / 100;
+    const totalWithDiscount = subtotal - discountAmount;
+    
+    return totalWithDiscount;
+  }, [selectedMaterials, materialsData, clientDiscount]);
 
   // Validar si se excede la capacidad del camión
   useEffect(() => {
@@ -574,6 +620,11 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
             <Form.Group as={Col} md={6} controlId="total">
               <Form.Label>Total a Pagar (RD$)</Form.Label>
               <Form.Control type="number" readOnly value={total.toFixed(2)} />
+              {clientDiscount > 0 && (
+                <Form.Text className="text-success">
+                  ✅ Descuento aplicado: {clientDiscount.toFixed(2)}% (Cliente: {formData.cliente})
+                </Form.Text>
+              )}
             </Form.Group>
           </Row>
 
