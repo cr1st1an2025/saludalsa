@@ -6,6 +6,7 @@ import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import DispatchDetailModal from './DispatchDetailModal';
+import EditDispatchModal from './EditDispatchModal';
 
 interface Props {
   dispatches: Dispatch[];
@@ -30,6 +31,8 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
   const [showModal, setShowModal] = useState(false);
   const [selectedDispatch, setSelectedDispatch] = useState<Dispatch | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingDispatch, setEditingDispatch] = useState<Dispatch | null>(null);
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -255,6 +258,38 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
     } catch (error) {
       console.error('Error al abrir detalles:', error);
       alert('Error al mostrar los detalles del despacho.');
+    }
+  };
+
+  const handleEdit = (dispatch: Dispatch) => {
+    setEditingDispatch(dispatch);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (updatedDispatch: Dispatch) => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_URL}/dispatches/${updatedDispatch.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updatedDispatch)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al actualizar el despacho');
+      }
+      
+      alert('Despacho actualizado correctamente');
+      setShowEditModal(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error al guardar despacho:', error);
+      alert('Error al guardar los cambios');
     }
   };
 
@@ -487,6 +522,12 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                   <Button variant="info" size="sm" className="me-1" title="Descargar PDF" onClick={() => handlePrintPDF(dispatch)}>
                     PDF
                   </Button>
+                  {/* Botón de editar solo para administradores */}
+                  {isAdmin && (
+                    <Button variant="success" size="sm" className="me-1" title="Editar" onClick={() => handleEdit(dispatch)}>
+                      Editar
+                    </Button>
+                  )}
                   {/* Solo mostrar botón de eliminar a administradores */}
                   {isAdmin && (
                     <Button variant="danger" size="sm" onClick={() => handleDelete(dispatch.id)}>
@@ -506,6 +547,14 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
         show={showModal}
         onHide={() => setShowModal(false)}
         onPrint={handlePrint}
+      />
+
+      {/* Modal para editar despacho */}
+      <EditDispatchModal
+        dispatch={editingDispatch}
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        onSave={handleSaveEdit}
       />
     </Card>
   );

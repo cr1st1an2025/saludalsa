@@ -4,6 +4,7 @@ import CompanyManager from '../components/CompanyManager';
 import ClientManager from '../components/ClientManager';
 import ProductPriceManager from '../components/ProductPriceManager';
 import AdvancedReports from '../components/AdvancedReports';
+import DispatchNumberConfig from '../components/DispatchNumberConfig';
 import { Dispatch } from '../types';
 
 interface Company {
@@ -93,6 +94,15 @@ const EnhancedAdminView: React.FC = () => {
           <Row className="mt-3">
             <Col md={12}>
               <ProductPriceManager />
+            </Col>
+          </Row>
+        </Tab>
+
+        {/* Configuración del Sistema */}
+        <Tab eventKey="config" title="Configuración">
+          <Row className="mt-3">
+            <Col md={12}>
+              <DispatchNumberConfig />
             </Col>
           </Row>
         </Tab>
