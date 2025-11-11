@@ -569,12 +569,12 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
                 type="number" 
                 value={formData.m3} 
                 onChange={handleInputChange}
-                readOnly={caminoData !== null && user?.role === 'employee'}
+                readOnly={user?.role === 'employee'}
                 placeholder={caminoData ? "Automático" : "Capacidad del camión"}
                 step="0.1"
                 required
               />
-              {user?.role === 'employee' && caminoData && <Form.Text className="text-muted">Camión ya registrado (solo admin puede modificar)</Form.Text>}
+              {user?.role === 'employee' && <Form.Text className="text-muted">⚠️ Campo bloqueado por seguridad (solo admin puede modificar)</Form.Text>}
             </Form.Group>
           </Row>
 
