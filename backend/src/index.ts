@@ -264,7 +264,7 @@ app.use('/api/companies', authenticateToken, companyRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
 app.use('/api/client-prices', authenticateToken, clientPriceRoutes);
 app.use('/api/config', authenticateToken, checkRole('admin'), configRoutes); // Solo admin
-app.use('/api/caminos', caminoRoutes);
+app.use('/api/camiones', caminoRoutes); // Ruta de camiones
 app.use('/api/audit', checkRole('admin'), auditRoutes); // Logs de auditoría solo para admin
 app.use('/api/clients', clientRoutes); // Permitir sin autenticación para facilitar auto-registro
 
