@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
 
 // POST new client
 router.post('/', async (req, res) => {
-  const { name, companyId } = req.body;
+  const { name, companyId, rnc, direccion, obra, numero_orden_compra, descuento } = req.body;
   
   // Validación básica
   if (!name || name.trim() === '') {
@@ -62,19 +62,94 @@ router.post('/', async (req, res) => {
   
   try {
     // Verificar si ya existe
-    const checkResult = await client.query("SELECT id FROM clients WHERE LOWER(name) = LOWER($1)", [name.trim()]);
+    const checkResult = await client.query("SELECT * FROM clients WHERE LOWER(name) = LOWER($1)", [name.trim()]);
     if (checkResult.rows.length > 0) {
       return res.json(checkResult.rows[0]); // Retornar el cliente existente
     }
     
     const result = await client.query(
-      "INSERT INTO clients (name, companyId) VALUES ($1, $2) RETURNING id, name, companyId",
-      [name.trim(), companyId || 1]
+      `INSERT INTO clients 
+       (name, companyId, rnc, direccion, obra, numero_orden_compra, descuento) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+       RETURNING *`,
+      [
+        name.trim(), 
+        companyId || null,
+        rnc || null,
+        direccion || null,
+        obra || null,
+        numero_orden_compra || null,
+        descuento !== undefined ? parseFloat(descuento) : 0.00
+      ]
     );
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error al crear cliente:', err);
     res.status(500).json({ error: 'Error al crear cliente', details: (err as Error).message });
+  } finally {
+    client.release();
+  }
+});
+
+// PUT update client
+router.put('/:id', async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { name, companyId, rnc, direccion, obra, numero_orden_compra, descuento } = req.body;
+  
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'ID inválido' });
+  }
+  
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ error: 'Nombre de cliente es requerido' });
+  }
+  
+  const disableAuth = process.env.DISABLE_AUTH === 'true';
+  
+  if (disableAuth) {
+    const clientIndex = devClients.findIndex(c => c.id === id);
+    if (clientIndex === -1) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+    devClients[clientIndex] = { ...devClients[clientIndex], name: name.trim(), companyId };
+    return res.json(devClients[clientIndex]);
+  }
+  
+  const client = await db.connect();
+  
+  try {
+    const result = await client.query(
+      `UPDATE clients 
+       SET name = $1, 
+           companyId = $2, 
+           rnc = $3, 
+           direccion = $4, 
+           obra = $5, 
+           numero_orden_compra = $6, 
+           descuento = $7,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8 
+       RETURNING *`,
+      [
+        name.trim(),
+        companyId || null,
+        rnc || null,
+        direccion || null,
+        obra || null,
+        numero_orden_compra || null,
+        descuento !== undefined ? parseFloat(descuento) : 0.00,
+        id
+      ]
+    );
+    
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Cliente no encontrado' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar cliente:', err);
+    res.status(500).json({ error: 'Error al actualizar cliente', details: (err as Error).message });
   } finally {
     client.release();
   }

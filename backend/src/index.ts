@@ -73,6 +73,7 @@ import { migrateAddCompanyFields } from './migrations/add-company-fields';
 import { migrateAddTicketOrden } from './migrations/add-ticket-orden';
 import { migrateAddItbisToProducts } from './migrations/add-itbis-to-products';
 import { migrateCreateClientPrices } from './migrations/create-client-prices';
+import { migrateAddClientFields } from './migrations/add-client-fields';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -283,6 +284,7 @@ if (process.env.VERCEL !== '1') {
       await migrateAddTicketOrden(); // Cuarto: agregar ticketorden a dispatches
       await migrateAddItbisToProducts(); // Quinto: agregar ITBIS a products
       await migrateCreateClientPrices(); // Sexto: crear tabla client_prices
+      await migrateAddClientFields(); // Séptimo: agregar campos a clients
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }
