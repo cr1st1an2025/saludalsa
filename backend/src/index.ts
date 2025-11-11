@@ -62,6 +62,7 @@ import companyRoutes from './routes/companyRoutes';
 import clientRoutes from './routes/clientRoutes';
 import caminoRoutes from './routes/caminoRoutes';
 import productRoutes from './routes/productRoutes';
+import clientPriceRoutes from './routes/clientPriceRoutes';
 import authRoutes from './routes/authRoutes';
 import auditRoutes from './routes/auditRoutes';
 import authenticateToken from './middleware/authMiddleware';
@@ -70,6 +71,8 @@ import { migrateInitDatabase } from './migrations/init-database';
 import { migrateAddNumeroOrden } from './migrations/add-numero-orden';
 import { migrateAddCompanyFields } from './migrations/add-company-fields';
 import { migrateAddTicketOrden } from './migrations/add-ticket-orden';
+import { migrateAddItbisToProducts } from './migrations/add-itbis-to-products';
+import { migrateCreateClientPrices } from './migrations/create-client-prices';
 
 const app = express();
 const port = process.env.PORT || 3002;
@@ -256,6 +259,7 @@ app.use('/api/equipment', authenticateToken, equipmentRoutes);
 app.use('/api/operators', authenticateToken, operatorRoutes);
 app.use('/api/companies', authenticateToken, companyRoutes);
 app.use('/api/products', authenticateToken, productRoutes);
+app.use('/api/client-prices', authenticateToken, clientPriceRoutes);
 app.use('/api/camiones', caminoRoutes);
 app.use('/api/audit', checkRole('admin'), auditRoutes); // Logs de auditoría solo para admin
 app.use('/api/clients', clientRoutes); // Permitir sin autenticación para facilitar auto-registro
@@ -277,6 +281,8 @@ if (process.env.VERCEL !== '1') {
       await migrateAddNumeroOrden(); // Segundo: agregar columnas a dispatches
       await migrateAddCompanyFields(); // Tercero: agregar campos a companies
       await migrateAddTicketOrden(); // Cuarto: agregar ticketorden a dispatches
+      await migrateAddItbisToProducts(); // Quinto: agregar ITBIS a products
+      await migrateCreateClientPrices(); // Sexto: crear tabla client_prices
     } catch (error) {
       console.error('⚠️ Error ejecutando migraciones:', error);
     }

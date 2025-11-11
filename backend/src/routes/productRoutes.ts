@@ -35,13 +35,18 @@ router.get('/:id', async (req, res) => {
 // POST /api/products - Crear nuevo producto
 router.post('/', async (req, res) => {
   try {
-    const { name, price, unit } = req.body;
+    const { name, price, unit, itbisRate } = req.body;
     
     if (!name || price === undefined) {
       return res.status(400).json({ error: 'Nombre y precio son requeridos' });
     }
     
-    const product = await ProductModel.createProduct(name, parseFloat(price), unit || 'm³');
+    const product = await ProductModel.createProduct(
+      name, 
+      parseFloat(price), 
+      unit || 'm³',
+      itbisRate !== undefined ? parseFloat(itbisRate) : 0.00
+    );
     res.status(201).json(product);
   } catch (error: any) {
     console.error('Error creating product:', error);
@@ -53,13 +58,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const { name, price, unit } = req.body;
+    const { name, price, unit, itbisRate } = req.body;
     
     if (!name || price === undefined) {
       return res.status(400).json({ error: 'Nombre y precio son requeridos' });
     }
     
-    const product = await ProductModel.updateProduct(id, name, parseFloat(price), unit || 'm³');
+    const product = await ProductModel.updateProduct(
+      id, 
+      name, 
+      parseFloat(price), 
+      unit || 'm³',
+      itbisRate !== undefined ? parseFloat(itbisRate) : 0.00
+    );
     
     if (!product) {
       return res.status(404).json({ error: 'Producto no encontrado' });

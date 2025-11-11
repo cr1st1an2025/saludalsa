@@ -5,6 +5,7 @@ export interface Product {
   name: string;
   price: number;
   unit: string; // 'm³', 'ton', 'unit', etc.
+  itbis_rate: number; // Tasa de ITBIS (0.00 o 0.18)
   active: boolean;
   created_at?: Date;
   updated_at?: Date;
@@ -71,12 +72,12 @@ export class ProductModel {
     }
   }
 
-  static async createProduct(name: string, price: number, unit: string = 'm³'): Promise<Product> {
+  static async createProduct(name: string, price: number, unit: string = 'm³', itbisRate: number = 0.00): Promise<Product> {
     const client = await db.connect();
     try {
       const result = await client.query(
-        'INSERT INTO products (name, price, unit) VALUES ($1, $2, $3) RETURNING *',
-        [name, price, unit]
+        'INSERT INTO products (name, price, unit, itbis_rate) VALUES ($1, $2, $3, $4) RETURNING *',
+        [name, price, unit, itbisRate]
       );
       return result.rows[0];
     } finally {
@@ -84,12 +85,12 @@ export class ProductModel {
     }
   }
 
-  static async updateProduct(id: number, name: string, price: number, unit: string): Promise<Product | null> {
+  static async updateProduct(id: number, name: string, price: number, unit: string, itbisRate: number = 0.00): Promise<Product | null> {
     const client = await db.connect();
     try {
       const result = await client.query(
-        'UPDATE products SET name = $1, price = $2, unit = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4 RETURNING *',
-        [name, price, unit, id]
+        'UPDATE products SET name = $1, price = $2, unit = $3, itbis_rate = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5 RETURNING *',
+        [name, price, unit, itbisRate, id]
       );
       return result.rows.length > 0 ? result.rows[0] : null;
     } finally {
