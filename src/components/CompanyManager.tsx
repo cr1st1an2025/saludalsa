@@ -22,14 +22,11 @@ const CompanyManager: React.FC = () => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    address: '',
-    phone: '',
-    email: '',
     rnc: '',
+    address: '',
     domicilio: '',
     tipo_impositivo: 0,
-    exento: false,
-    contactos: ''
+    exento: false
   });
 
   useEffect(() => {
@@ -94,14 +91,11 @@ const CompanyManager: React.FC = () => {
     setEditingCompany(company);
     setFormData({
       name: company.name,
-      address: company.address || '',
-      phone: company.phone || '',
-      email: company.email || '',
       rnc: company.rnc || '',
+      address: company.address || '',
       domicilio: company.domicilio || '',
       tipo_impositivo: company.tipo_impositivo || 0,
-      exento: company.exento || false,
-      contactos: company.contactos || ''
+      exento: company.exento || false
     });
     setShowModal(true);
   };
@@ -128,7 +122,7 @@ const CompanyManager: React.FC = () => {
 
   const resetForm = () => {
     setEditingCompany(null);
-    setFormData({ name: '', address: '', phone: '', email: '', rnc: '', domicilio: '', tipo_impositivo: 0, exento: false, contactos: '' });
+    setFormData({ name: '', rnc: '', address: '', domicilio: '', tipo_impositivo: 0, exento: false });
     setShowModal(false);
   };
 
@@ -151,9 +145,6 @@ const CompanyManager: React.FC = () => {
                 {company.rnc && <div><strong>RNC:</strong> {company.rnc}</div>}
                 {company.address && <div><strong>Dirección:</strong> {company.address}</div>}
                 {company.domicilio && <div><strong>Domicilio Fiscal:</strong> {company.domicilio}</div>}
-                {company.phone && <div><strong>Teléfono:</strong> {company.phone}</div>}
-                {company.email && <div><strong>Email:</strong> {company.email}</div>}
-                {company.contactos && <div><strong>Contactos:</strong> {company.contactos}</div>}
                 <div><strong>Tipo Impositivo:</strong> {company.tipo_impositivo}%</div>
                 {company.exento && <div className="badge bg-success">Exento de Impuestos</div>}
               </div>
@@ -224,40 +215,6 @@ const CompanyManager: React.FC = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Teléfono</Form.Label>
-              <Form.Control 
-                type="text" 
-                name="phone"
-                value={formData.phone} 
-                onChange={handleInputChange}
-                placeholder="Teléfono de contacto"
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
-              <Form.Control 
-                type="email" 
-                name="email"
-                value={formData.email} 
-                onChange={handleInputChange}
-                placeholder="Correo electrónico"
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
-              <Form.Label>Contactos Adicionales</Form.Label>
-              <Form.Control 
-                as="textarea"
-                rows={3}
-                name="contactos"
-                value={formData.contactos} 
-                onChange={handleInputChange}
-                placeholder="Nombres de contacto, teléfonos adicionales, etc."
-              />
-            </Form.Group>
-            
-            <Form.Group className="mb-3">
               <Form.Label>Tipo Impositivo (%)</Form.Label>
               <Form.Control 
                 type="number" 
@@ -267,7 +224,7 @@ const CompanyManager: React.FC = () => {
                 step="1"
                 min="0"
                 max="100"
-                placeholder="Ej: 0 o 18"
+                placeholder="0 o 18"
               />
               <Form.Text className="text-muted">
                 Porcentaje de impuesto aplicable (ej: 18 para ITBIS 18%)
