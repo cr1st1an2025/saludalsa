@@ -71,7 +71,7 @@ const DispatchNumberConfig: React.FC = () => {
         )}
         
         <Form.Group className="mb-3">
-          <Form.Label>Número Inicial de Despachos</Form.Label>
+          <Form.Label>Número Inicial para Próximos Despachos</Form.Label>
           <Form.Control
             type="number"
             min="1"
@@ -79,8 +79,10 @@ const DispatchNumberConfig: React.FC = () => {
             onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
           />
           <Form.Text className="text-muted">
-            Este número se usará como punto de partida para la numeración automática de despachos.
-            Los despachos existentes no se verán afectados.
+            <strong>⚠️ Importante:</strong> Al cambiar este número, todos los <strong>nuevos despachos</strong> comenzarán 
+            a numerarse desde este punto. Los despachos ya creados NO se verán afectados.<br/>
+            <strong>Ejemplo:</strong> Si configuras el número 5000, el próximo despacho será <strong>0005000</strong>, 
+            luego 0005001, 0005002, etc.
           </Form.Text>
         </Form.Group>
 

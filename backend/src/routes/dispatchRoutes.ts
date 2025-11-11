@@ -217,12 +217,31 @@ router.post('/', async (req: AuthRequest, res) => {
       console.log('✅ Camión guardado/actualizado');
     }
     
-    // 2. Obtener siguiente número de despacho (atómico)
-    const numberResult = await client.query('SELECT get_next_dispatch_number() as next_number');
-    const nextNumber = numberResult.rows[0].next_number;
+    // 2. Obtener siguiente número de despacho desde configuración
+    // Primero obtener el número inicial configurado
+    const configResult = await client.query(
+      "SELECT value FROM config WHERE key = 'dispatch_start_number'"
+    );
+    const startNumber = configResult.rows.length > 0 ? parseInt(configResult.rows[0].value) : 1;
+    
+    // Obtener el último número de despacho usado
+    const lastDispatchResult = await client.query(
+      "SELECT despachoNo FROM dispatches ORDER BY id DESC LIMIT 1"
+    );
+    
+    let nextNumber: number;
+    if (lastDispatchResult.rows.length === 0) {
+      // No hay despachos, usar el número inicial configurado
+      nextNumber = startNumber;
+    } else {
+      // Hay despachos, tomar el último y sumarle 1
+      const lastNumber = parseInt(lastDispatchResult.rows[0].despachono) || 0;
+      nextNumber = Math.max(lastNumber + 1, startNumber);
+    }
+    
     const despachoNo = String(nextNumber).padStart(7, '0'); // 7 dígitos numéricos
     
-    console.log('🔢 Número generado:', despachoNo);
+    console.log('🔢 Número generado:', despachoNo, '(config start:', startNumber, ', last:', lastDispatchResult.rows[0]?.despachono || 'ninguno', ')');
     
     const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`;
