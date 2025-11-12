@@ -51,8 +51,14 @@ const DispatchDetailModal: React.FC<DispatchDetailModalProps> = ({ dispatch, sho
     ? dispatch.materials 
     : (typeof dispatch.materials === 'string' ? JSON.parse(dispatch.materials) : []);
 
-  // Formatear la fecha
-  const formattedDate = new Date(dispatch.fecha).toLocaleDateString();
+  // Formatear la fecha directamente desde el string (evitar conversión UTC)
+  const formatDate = (dateString: string) => {
+    // dateString viene en formato "YYYY-MM-DD" de la BD
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`; // Formato DD/MM/YYYY
+  };
+  
+  const formattedDate = formatDate(dispatch.fecha);
 
   // Calcular totales por material
   const materialTotals = materials.map((material: { id: string; quantity: number }) => {

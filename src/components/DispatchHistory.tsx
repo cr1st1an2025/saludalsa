@@ -229,7 +229,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
     const parts = dateString.split('T')[0].split('-');
     if (parts.length === 3) {
       const [year, month, day] = parts;
-      return `${day}.${month}.${year}`;
+      return `${day}/${month}/${year}`; // Formato DD/MM/YYYY
     }
     return dateString;
   };
