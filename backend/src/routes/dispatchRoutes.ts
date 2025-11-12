@@ -61,7 +61,7 @@ router.get('/', async (req, res) => {
     const mappedData = result.rows.map(row => ({
       id: row.id,
       despachoNo: row.despachono,
-      fecha: row.fecha,
+      fecha: new Date(row.fecha).toISOString().split('T')[0], // Corregir la zona horaria
       hora: row.hora,
       camion: row.camion,
       placa: row.placa,
