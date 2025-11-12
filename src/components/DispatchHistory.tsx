@@ -221,10 +221,17 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
     }
   };
 
-  // Función para formatear la fecha
+  // Función para formatear la fecha sin problemas de zona horaria
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? dateString : date.toLocaleDateString();
+    if (!dateString || typeof dateString !== 'string' || !dateString.includes('-')) {
+      return dateString;
+    }
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      return `${day}.${month}.${year}`;
+    }
+    return dateString;
   };
 
   const handleDelete = async (id: number) => {
@@ -332,7 +339,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       // Información del despacho
       doc.setFontSize(10);
       const info = [
-        `Fecha: ${new Date(dispatch.fecha).toLocaleDateString()}`,
+        `Fecha: ${formatDate(dispatch.fecha)}`,
         `Hora: ${dispatch.hora}`,
         `Cliente: ${dispatch.cliente}`,
         `Atendido por: ${dispatch.userName || 'No especificado'}`,
@@ -433,7 +440,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
               </div>
               
               <div class="info-section">
-                <p><strong>Fecha:</strong> ${new Date(dispatch.fecha).toLocaleDateString()}</p>
+                <p><strong>Fecha:</strong> ${formatDate(dispatch.fecha)}</p>
                 <p><strong>Hora:</strong> ${dispatch.hora}</p>
                 <p><strong>Cliente:</strong> ${dispatch.cliente}</p>
                 <p><strong>Atendido por:</strong> ${dispatch.userName || 'No especificado'}</p>
