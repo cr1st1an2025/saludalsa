@@ -547,4 +547,53 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   }
 });
 
+// DELETE /api/dispatches/clear-all - ENDPOINT TEMPORAL para borrar todos los despachos (solo admin)
+router.delete('/clear-all', async (req: AuthRequest, res) => {
+  console.log('⚠️ DELETE /api/dispatches/clear-all - BORRAR TODOS LOS DESPACHOS');
+  
+  // Verificar que el usuario sea admin
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden borrar todos los despachos.' });
+  }
+  
+  const disableAuth = process.env.DISABLE_AUTH === 'true';
+  
+  if (disableAuth) {
+    devDispatches = [];
+    nextDispatchId = 1;
+    return res.json({ message: 'Todos los despachos han sido eliminados (modo desarrollo)', count: 0 });
+  }
+  
+  const client = await db.connect();
+  
+  try {
+    const countResult = await client.query('SELECT COUNT(*) FROM dispatches');
+    const count = parseInt(countResult.rows[0].count);
+    
+    await client.query('DELETE FROM dispatches');
+    
+    console.log(`✅ ${count} despachos eliminados correctamente`);
+    
+    // Registrar en auditoría
+    if (req.user) {
+      await logManualAction(
+        req.user.id,
+        req.user.username,
+        'DELETE',
+        'dispatch',
+        0,
+        { action: 'clear_all', count },
+        req
+      );
+    }
+    
+    res.json({ message: `Todos los despachos han sido eliminados (${count} registros)`, count });
+  } catch (err) {
+    console.error('Error al eliminar todos los despachos:', err);
+    res.status(500).json({ error: 'Error al eliminar todos los despachos', details: (err as Error).message });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;
