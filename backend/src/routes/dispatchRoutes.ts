@@ -111,8 +111,32 @@ router.post('/', async (req: AuthRequest, res) => {
   
   // 🕒 Capturar fecha y hora del servidor (República Dominicana UTC-4)
   const now = new Date();
-  const serverFecha = fecha || now.toLocaleString('en-CA', { timeZone: 'America/Santo_Domingo' }).split(',')[0];
-  const serverHora = hora || now.toLocaleString('en-GB', { timeZone: 'America/Santo_Domingo', hour: '2-digit', minute: '2-digit', hour12: false });
+  
+  // Obtener fecha y hora en República Dominicana
+  let serverFecha: string;
+  let serverHora: string;
+  
+  if (fecha && hora) {
+    // Si vienen del frontend (admin), usarlas
+    serverFecha = fecha;
+    serverHora = hora;
+  } else {
+    // Si no vienen (empleado), generar desde el servidor en zona horaria RD
+    const rdDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Santo_Domingo' }));
+    
+    // Formato YYYY-MM-DD para fecha
+    const year = rdDate.getFullYear();
+    const month = String(rdDate.getMonth() + 1).padStart(2, '0');
+    const day = String(rdDate.getDate()).padStart(2, '0');
+    serverFecha = `${year}-${month}-${day}`;
+    
+    // Formato HH:MM para hora
+    const hours = String(rdDate.getHours()).padStart(2, '0');
+    const minutes = String(rdDate.getMinutes()).padStart(2, '0');
+    serverHora = `${hours}:${minutes}`;
+  }
+  
+  console.log('🕒 Fecha/Hora capturada:', { serverFecha, serverHora, origen: (fecha && hora) ? 'admin' : 'servidor' });
   
   // Convertir campos de texto a MAYÚSCULAS
   const camionUpper = camion ? camion.toUpperCase() : '';
