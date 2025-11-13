@@ -281,14 +281,20 @@ const ProductPriceManager: React.FC = () => {
                             variant="primary" 
                             size="sm"
                             className="me-2"
-                            onClick={() => handleEditPrice(product)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditPrice(product);
+                            }}
                           >
                             Editar
                           </Button>
                           <Button 
                             variant="danger" 
                             size="sm" 
-                            onClick={() => handleDeleteProduct(product.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteProduct(product.id);
+                            }}
                           >
                             Desactivar
                           </Button>
@@ -297,7 +303,10 @@ const ProductPriceManager: React.FC = () => {
                         <Button 
                           variant="success" 
                           size="sm" 
-                          onClick={() => handleActivateProduct(product.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleActivateProduct(product.id);
+                          }}
                         >
                           Activar
                         </Button>
