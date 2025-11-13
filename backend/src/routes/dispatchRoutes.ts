@@ -109,6 +109,11 @@ router.get('/', async (req, res) => {
 router.post('/', async (req: AuthRequest, res) => {
   const { fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId } = req.body;
   
+  // 🕒 Capturar fecha y hora del servidor (República Dominicana UTC-4)
+  const now = new Date();
+  const serverFecha = fecha || now.toLocaleString('en-CA', { timeZone: 'America/Santo_Domingo' }).split(',')[0];
+  const serverHora = hora || now.toLocaleString('en-GB', { timeZone: 'America/Santo_Domingo', hour: '2-digit', minute: '2-digit', hour12: false });
+  
   // Convertir campos de texto a MAYÚSCULAS
   const camionUpper = camion ? camion.toUpperCase() : '';
   const placaUpper = placa ? placa.toUpperCase() : '';
@@ -119,16 +124,14 @@ router.post('/', async (req: AuthRequest, res) => {
   const choferUpper = chofer ? chofer.toUpperCase() : '';
   const clienteUpper = cliente ? cliente.toUpperCase() : '';
   
-  console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha, hora, camion: camionUpper, placa: placaUpper, numeroOrden: numeroOrdenUpper, ticketOrden: ticketOrdenUpper, chofer: choferUpper, m3, cliente: clienteUpper, userId, total, materials }, null, 2));
+  console.log('📥 Backend recibiendo despacho:', JSON.stringify({ fecha: serverFecha, hora: serverHora, camion: camionUpper, placa: placaUpper, numeroOrden: numeroOrdenUpper, ticketOrden: ticketOrdenUpper, chofer: choferUpper, m3, cliente: clienteUpper, userId, total, materials }, null, 2));
   
-  // Validación básica de datos requeridos (despachoNo ya no es necesario, se genera automáticamente)
-  if (!fecha || !hora || !camionUpper || !placaUpper || !clienteUpper) {
-    console.error('❌ Faltan campos requeridos:', { fecha: !!fecha, hora: !!hora, camion: !!camionUpper, placa: !!placaUpper, cliente: !!clienteUpper });
+  // Validación básica de datos requeridos (fecha y hora ahora se generan automáticamente en el servidor)
+  if (!camionUpper || !placaUpper || !clienteUpper) {
+    console.error('❌ Faltan campos requeridos:', { camion: !!camionUpper, placa: !!placaUpper, cliente: !!clienteUpper });
     return res.status(400).json({ 
       error: 'Faltan campos requeridos',
       missing: {
-        fecha: !fecha,
-        hora: !hora,
         camion: !camionUpper,
         placa: !placaUpper,
         cliente: !clienteUpper
@@ -173,8 +176,8 @@ router.post('/', async (req: AuthRequest, res) => {
     const newDispatch = {
       id: nextDispatchId++,
       despachoNo,
-      fecha,
-      hora,
+      fecha: serverFecha,
+      hora: serverHora,
       camion: camionUpper,
       placa: placaUpper,
       color: colorUpper,
@@ -245,7 +248,7 @@ router.post('/', async (req: AuthRequest, res) => {
     
     const sql = `INSERT INTO dispatches (despachoNo, fecha, hora, camion, placa, color, ficha, numeroOrden, ticketOrden, chofer, m3, materials, cliente, celular, total, userId, equipmentId, operatorId)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id`;
-    const params = [despachoNo, fecha, hora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, ticketOrdenUpper, choferUpper, finalM3, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
+    const params = [despachoNo, serverFecha, serverHora, camionUpper, placaUpper, colorUpper, fichaUpper, numeroOrdenUpper, ticketOrdenUpper, choferUpper, finalM3, JSON.stringify(finalMaterials), clienteUpper, celular, finalTotal, finalUserId, finalEquipmentId, finalOperatorId];
     
     console.log('💾 Insertando en BD con userId:', finalUserId);
     console.log('📋 Valores a insertar:', {

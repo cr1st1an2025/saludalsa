@@ -342,8 +342,12 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    // Validar campos requeridos
-    if (!formData.fecha || !formData.hora) {
+    // Para empleados, NO enviar fecha/hora (el backend las generará)
+    // Para admins, enviar la fecha/hora que eligieron
+    const shouldSendDateTime = user?.role === 'admin';
+    
+    // Validar campos requeridos (solo para admins)
+    if (shouldSendDateTime && (!formData.fecha || !formData.hora)) {
       alert('⚠️ Fecha y hora son requeridos');
       return;
     }
@@ -392,16 +396,22 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
     // Asegurar que userId tenga un valor válido antes de enviar
     const finalUserId = formData.userId || user?.id || 1; // Fallback a admin si no hay usuario
     
-    const newDispatch: Omit<Dispatch, 'id'> = {
+    // Preparar datos del despacho
+    const baseDispatch = {
       ...formData,
       userId: finalUserId,
       materials: Object.keys(selectedMaterials)
         .filter(key => selectedMaterials[key].selected && selectedMaterials[key].quantity > 0)
         .map(key => ({ id: key, quantity: selectedMaterials[key].quantity })),
       total,
-      ticketOrden: formData.ticketOrden || '', // Asegurar que siempre tenga valor
-      chofer: formData.chofer || '', // Asegurar que siempre tenga valor
+      ticketOrden: formData.ticketOrden || '',
+      chofer: formData.chofer || '',
     };
+    
+    // Si es empleado, NO enviar fecha/hora (el backend las generará automáticamente)
+    const newDispatch: any = shouldSendDateTime 
+      ? baseDispatch 
+      : { ...baseDispatch, fecha: undefined, hora: undefined };
     
     console.log('📤 Enviando despacho:', newDispatch);
     onSubmit(newDispatch);
@@ -435,7 +445,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
                 onChange={handleInputChange}
                 readOnly={user?.role === 'employee'}
               />
-              {user?.role === 'employee' && <Form.Text className="text-muted">No puedes cambiar la fecha</Form.Text>}
+              {user?.role === 'employee' && <Form.Text className="text-success">✅ Se usará la fecha actual al guardar</Form.Text>}
             </Form.Group>
             <Form.Group as={Col} controlId="hora">
               <Form.Label>Hora</Form.Label>
@@ -445,7 +455,7 @@ const DispatchForm: React.FC<Props> = ({ onSubmit }) => {
                 onChange={handleInputChange}
                 readOnly={user?.role === 'employee'}
               />
-              {user?.role === 'employee' && <Form.Text className="text-muted">No puedes cambiar la hora</Form.Text>}
+              {user?.role === 'employee' && <Form.Text className="text-success">✅ Se usará la hora actual al guardar</Form.Text>}
             </Form.Group>
           </Row>
 
