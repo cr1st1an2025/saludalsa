@@ -21,6 +21,7 @@ export class ProductModel {
           name VARCHAR(100) NOT NULL,
           price DECIMAL(10, 2) NOT NULL DEFAULT 0,
           unit VARCHAR(20) DEFAULT 'm³',
+          itbis_rate DECIMAL(4, 2) DEFAULT 0.00,
           active BOOLEAN DEFAULT true,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
