@@ -140,6 +140,26 @@ const ProductPriceManager: React.FC = () => {
     }
   };
 
+  const handleActivateProduct = async (productId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/products/${productId}/activate`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Producto activado correctamente' });
+        fetchProducts();
+      } else {
+        setMessage({ type: 'danger', text: 'Error al activar producto' });
+      }
+    } catch (error) {
+      console.error('Error activating product:', error);
+      setMessage({ type: 'danger', text: 'Error al activar producto' });
+    }
+  };
+
   const handleCancelEdit = () => {
     setEditingId(null);
   };
@@ -255,23 +275,33 @@ const ProductPriceManager: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Button 
-                        variant="primary" 
-                        size="sm"
-                        className="me-2"
-                        onClick={() => handleEditPrice(product)}
-                        disabled={!product.active}
-                      >
-                        Editar
-                      </Button>
-                      <Button 
-                        variant="danger" 
-                        size="sm" 
-                        onClick={() => handleDeleteProduct(product.id)}
-                        disabled={!product.active}
-                      >
-                        Desactivar
-                      </Button>
+                      {product.active ? (
+                        <>
+                          <Button 
+                            variant="primary" 
+                            size="sm"
+                            className="me-2"
+                            onClick={() => handleEditPrice(product)}
+                          >
+                            Editar
+                          </Button>
+                          <Button 
+                            variant="danger" 
+                            size="sm" 
+                            onClick={() => handleDeleteProduct(product.id)}
+                          >
+                            Desactivar
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          variant="success" 
+                          size="sm" 
+                          onClick={() => handleActivateProduct(product.id)}
+                        >
+                          Activar
+                        </Button>
+                      )}
                     </>
                   )}
                 </td>
