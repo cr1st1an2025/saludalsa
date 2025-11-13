@@ -58,30 +58,46 @@ router.get('/', async (req, res) => {
     const result = await client.query(sql, params);
     
     // Mapear las columnas de PostgreSQL (minúsculas) al formato esperado por el frontend (camelCase)
-    const mappedData = result.rows.map(row => ({
-      id: row.id,
-      despachoNo: row.despachono,
-      fecha: new Date(row.fecha).toISOString().split('T')[0], // Corregir la zona horaria
-      hora: row.hora,
-      camion: row.camion,
-      placa: row.placa,
-      color: row.color,
-      ficha: row.ficha,
-      numeroOrden: row.numeroorden || '',
-      ticketOrden: row.ticketorden || '',
-      chofer: row.chofer || '',
-      m3: row.m3 || 0,
-      materials: row.materials,
-      cliente: row.cliente,
-      celular: row.celular,
-      total: row.total,
-      userId: row.userid,
-      equipmentId: row.equipmentid,
-      operatorId: row.operatorid,
-      userName: row.username,
-      equipmentName: row.equipmentname,
-      operatorName: row.operatorname
-    }));
+    const mappedData = result.rows.map(row => {
+      // Parsear fecha directamente sin conversión a Date para evitar problemas de zona horaria
+      let fechaFormateada: string;
+      if (typeof row.fecha === 'string' && row.fecha.includes('-')) {
+        // Si ya es un string YYYY-MM-DD, usarlo directamente
+        fechaFormateada = row.fecha;
+      } else {
+        // Si es un objeto Date de PostgreSQL, extraer la fecha manualmente
+        const dateObj = new Date(row.fecha);
+        const year = dateObj.getUTCFullYear();
+        const month = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getUTCDate()).padStart(2, '0');
+        fechaFormateada = `${year}-${month}-${day}`;
+      }
+      
+      return {
+        id: row.id,
+        despachoNo: row.despachono,
+        fecha: fechaFormateada,
+        hora: row.hora,
+        camion: row.camion,
+        placa: row.placa,
+        color: row.color,
+        ficha: row.ficha,
+        numeroOrden: row.numeroorden || '',
+        ticketOrden: row.ticketorden || '',
+        chofer: row.chofer || '',
+        m3: row.m3 || 0,
+        materials: row.materials,
+        cliente: row.cliente,
+        celular: row.celular,
+        total: row.total,
+        userId: row.userid,
+        equipmentId: row.equipmentid,
+        operatorId: row.operatorid,
+        userName: row.username,
+        equipmentName: row.equipmentname,
+        operatorName: row.operatorname
+      };
+    });
     
     // Log para debugging
     if (mappedData.length > 0) {
