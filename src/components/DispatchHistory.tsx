@@ -398,7 +398,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
       doc.text('___________________________', 30, finalY + 20);
       doc.text('Firma del responsable', 30, finalY + 27);
       doc.text('___________________________', 130, finalY + 20);
-      doc.text(`Firmado por ${dispatch.chofer || 'Responsable'}`, 130, finalY + 27);
+      doc.text(`Firmado por ${dispatch.chofer || 'chofer'}`, 130, finalY + 27);
 
       // Guardar PDF
       doc.save(`Despacho_${dispatch.despachoNo}.pdf`);
@@ -484,7 +484,7 @@ const DispatchHistory: React.FC<Props> = ({ dispatches, onDelete, isAdmin = fals
                 </div>
                 <div>
                   <p>___________________________</p>
-                  <p>Firmado por ${dispatch.chofer || 'Responsable'}</p>
+                  <p>Firmado por ${dispatch.chofer || 'chofer'}</p>
                 </div>
               </div>
             </body>
